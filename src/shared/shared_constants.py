@@ -1,4 +1,6 @@
-dummy_save_to_create_map_gen_settings = (
+from pathlib import Path
+
+dummy_save_to_create_map_gen_settings_path = Path(
     "factorio-preview-toolkit-dummy-save-to-create-map-gen-settings"
 )
 

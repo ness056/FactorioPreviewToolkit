@@ -1,7 +1,7 @@
 import subprocess
 from pathlib import Path
 
-from src.shared.config_loader import get_config
+from src.shared.config import Config
 from src.shared.structured_logger import log, log_section
 from src.uploader.base_uploader import BaseUploader
 
@@ -9,13 +9,13 @@ from src.uploader.base_uploader import BaseUploader
 class RcloneUploader(BaseUploader):
 
     def _is_rclone_configured(self, remote_name: str) -> bool:
-        rclone = get_config().rclone_executable
+        rclone = Config.get().rclone_executable
         result = subprocess.run([rclone, "listremotes"], capture_output=True, text=True)
         remotes = result.stdout.strip().splitlines()
         return any(remote_name + ":" == remote for remote in remotes)
 
     def _open_rclone_config(self) -> None:
-        rclone = get_config().rclone_executable
+        rclone = Config.get().rclone_executable
         log.info("🔧 Opening rclone config interface...")
 
         try:
@@ -27,8 +27,8 @@ class RcloneUploader(BaseUploader):
             raise
 
     def upload_single(self, local_path: Path, remote_filename: str) -> str:
-        config = get_config()
-        rclone = get_config().rclone_executable
+        config = Config.get()
+        rclone = Config.get().rclone_executable
         remote_name = config.rclone_remote_service
         remote_folder = config.upload_remote_folder
         remote_target = f"{remote_name}:{remote_folder}"
@@ -39,11 +39,20 @@ class RcloneUploader(BaseUploader):
             self._open_rclone_config()
             raise RuntimeError(f"Rclone remote '{remote_name}' not configured.")
 
-        with log_section(f"⬆️ Uploading {local_path.name} to {remote_target}"):
+        with log_section(f"⬆️ Uploading {local_path.name} to {remote_target}..."):
             try:
-                subprocess.run(
-                    [rclone, "copy", str(local_path), remote_target], check=True
+                result = subprocess.run(
+                    [rclone, "copy", str(local_path), remote_target],
+                    check=True,
+                    capture_output=True,
+                    text=True,
                 )
+
+                # Filter out known harmless notices
+                for line in result.stderr.splitlines():
+                    if "Forced to upload files to set modification times" not in line:
+                        log.info(line)
+
                 log.info("✅ Upload complete.")
             except subprocess.CalledProcessError as e:
                 log.error("❌ Upload failed.")
@@ -60,9 +69,15 @@ class RcloneUploader(BaseUploader):
                     check=True,
                 )
                 share_url = result.stdout.strip()
-                if "drive.google.com/open?id=" in share_url:
-                    file_id = share_url.split("id=")[-1]
-                    share_url = f"https://drive.google.com/uc?export=view&id={file_id}"
+
+                # Handle Dropbox
+                if "dropbox.com" in share_url:
+                    # Force raw preview link
+                    share_url = share_url.replace(
+                        "www.dropbox.com", "dl.dropboxusercontent.com"
+                    )
+                    share_url = share_url.replace("&dl=0", "")
+                    share_url = share_url.replace("&dl=1", "")
 
                 log.info(f"🔗 Shareable URL: {share_url}")
                 return share_url

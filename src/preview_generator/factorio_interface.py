@@ -1,34 +1,27 @@
-# src/preview_generator/factorio_interface.py
-
 import subprocess
 import sys
 from pathlib import Path
 
-from src.shared.config_loader import get_config
 from src.shared.structured_logger import log
 
 
-def get_factorio_executable() -> Path:
+def get_factorio_executable(factorio_base_path: Path) -> Path:
     """Returns the full path to the Factorio executable, OS-specific."""
-    base_path = get_config().factorio_folder
-
     if sys.platform.startswith("win"):
-        return base_path / "bin" / "x64" / "factorio.exe"
+        return factorio_base_path / "bin" / "x64" / "factorio.exe"
     elif sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
-        return base_path  # User must provide correct path
+        return factorio_base_path  # User must provide correct path
     else:
         raise RuntimeError(f"Unsupported platform: {sys.platform}")
 
 
-def run_factorio_command(args: list[str]) -> None:
-    """Executes Factorio with the given CLI arguments."""
-    exe = get_factorio_executable().resolve()
-
+def run_factorio_command(factorio_executable_path: Path, args: list[str]) -> None:
+    """Executes Factorio with the given executable path and CLI arguments."""
     # Resolve all args that are not flags (e.g. not starting with --)
     resolved_args = [
         str(Path(arg).resolve()) if not arg.startswith("--") else arg for arg in args
     ]
-    cmd = [str(exe)] + resolved_args
+    cmd = [str(factorio_executable_path)] + resolved_args  # Factorio path comes first
 
     try:
         subprocess.run(cmd, check=True, capture_output=True, text=True)

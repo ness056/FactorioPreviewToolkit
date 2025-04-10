@@ -1,10 +1,10 @@
-from src.shared.config_loader import get_config
+from src.shared.config import Config
 from src.uploader.base_uploader import BaseUploader
 from src.uploader.rclone_uploader import RcloneUploader
 
 
 def get_uploader() -> BaseUploader:
-    match get_config().upload_method:
+    match Config.get().upload_method:
         case "rclone":
             return RcloneUploader()
         case "none":

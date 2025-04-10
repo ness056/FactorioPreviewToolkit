@@ -7,6 +7,6 @@ if __name__ == "__main__":
     log.info("🚀 Factorio preview toolkit started.")
     try:
         controller = PreviewController()
-        controller.run()
+        controller.start()
     finally:
         log.info("👋 Factorio preview Toolkit exited.")

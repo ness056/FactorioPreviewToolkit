@@ -2,14 +2,14 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict
 
-from src.shared.config_loader import get_config
+from src.shared.config import Config
 from src.shared.structured_logger import log, log_section
 from src.uploader.constants import LINK_OUTPUT_FILE
 
 
 class BaseUploader(ABC):
     def upload_all(self) -> None:
-        config = get_config()
+        config = Config.get()
         with log_section("🚀 Starting image upload..."):
             planet_links: Dict[str, str] = {}
 

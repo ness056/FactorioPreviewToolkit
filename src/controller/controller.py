@@ -1,147 +1,101 @@
-# src/controller/controller.py
-
-import subprocess
-import sys
-from threading import Lock, Thread
+import queue
+from pathlib import Path
+from queue import Queue
 from typing import Optional
 
+from src.controller.map_processing_pipeline import MapProcessingPipeline
+from src.factorio_path_provider.factory import get_factorio_path_provider
 from src.map_string_provider.factory import get_map_string_provider
-from src.shared.config_loader import get_config
-from src.shared.sound import play_sound
 from src.shared.structured_logger import log
 
 
 class PreviewController:
+    """
+    A controller for managing map processing pipeline for Factorio map previews.
+
+    This controller listens for map strings and Factorio paths asynchronously and processes them
+    by running the map preview generation and upload tasks. Only one task is executed at a time,
+    and if a new task starts, the old task is aborted.
+    """
+
     def __init__(self):
-        self._config = get_config()
-        self._provider = get_map_string_provider(self._config.map_exchange_input_method)
-        self._preview_process: Optional[subprocess.Popen] = None
-        self._upload_process: Optional[subprocess.Popen] = None
-        self._worker_thread: Optional[Thread] = None
-        self._worker_counter = 1
-        self._lock = Lock()
+        """
+        Initializes the PreviewController with required resources.
+        """
+        self._running = False
+        self._factorio_path_provider = None
+        self._map_string_provider = None
 
-    def _stop_preview_generator(self):
-        with self._lock:
-            if self._preview_process and self._preview_process.poll() is None:
-                log.info("🛑 Killing preview generator...")
-                self._preview_process.kill()
-                log.info("✅ Preview generator killed.")
-            self._preview_process = None
+        self._latest_factorio_path: Optional[Path] = None
+        self._latest_map_string: Optional[str] = None
+        self._map_string_analysed = False
 
-    def _stop_uploader(self):
-        with self._lock:
-            if self._upload_process and self._upload_process.poll() is None:
-                log.info("🛑 Killing uploader...")
-                self._upload_process.kill()
-                log.info("✅ Uploader killed.")
-            self._upload_process = None
+        self._event_queue = Queue()
+        self._map_processing_pipeline = MapProcessingPipeline()
 
-    def _start_preview_generator(self, map_string: str) -> Optional[bool]:
-        log.info("🚀 Launching preview generator...")
-        process = subprocess.Popen(
-            [sys.executable, "-u", "-m", "src.preview_generator", map_string],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-        )
-        self._preview_process = process
+    def _process_events(self):
+        """
+        Processes events from the event queue. This method listens for new map strings and Factorio paths,
+        and triggers the map processing pipeline when both are available.
+        """
+        while self._running:
+            try:
+                event_type, data = self._event_queue.get(timeout=0.5)
+            except queue.Empty:
+                continue
 
-        try:
-            for line in process.stdout:
-                print(line, end="")  # Forward to console/log
-        except Exception as e:
-            log.error(f"❌ Failed to read generator output: {e}")
+            if event_type == "map_string":
+                self._latest_map_string = data
+                self._map_string_analysed = False
 
-        exit_code = process.wait()
-        if process.poll() is None:
-            return None  # Killed externally
-        return exit_code == 0
+            elif event_type == "factorio_path":
+                self._latest_factorio_path = data
 
-    def _start_uploader(self) -> Optional[bool]:
-        log.info("🌐 Starting uploader...")
-        process = subprocess.Popen(
-            [sys.executable, "-u", "-m", "src.uploader"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-        )
-        self._upload_process = process
+            if (
+                self._latest_map_string
+                and self._latest_factorio_path
+                and not self._map_string_analysed
+            ):
+                self._start_map_processing()
 
-        try:
-            for line in process.stdout:
-                print(line, end="")  # Forward to console/log
-        except Exception as e:
-            log.error(f"❌ Failed to read uploader output: {e}")
-
-        exit_code = process.wait()
-        if process.poll() is None:
-            return None  # Killed externally
-        return exit_code == 0
-
-    def _on_start(self):
-        play_sound(self._config.sound_start_file, self._config.sound_volume_start_file)
-
-    def _on_success(self):
-        play_sound(
-            self._config.sound_success_file, self._config.sound_volume_success_file
+    def _start_map_processing(self):
+        """
+        Starts the map processing pipeline with the latest map string and Factorio path.
+        """
+        self._map_string_analysed = True
+        self._map_processing_pipeline.run_async(
+            self._latest_factorio_path, self._latest_map_string
         )
 
-    def _on_failure(self):
-        play_sound(
-            self._config.sound_failure_file, self._config.sound_volume_failure_file
-        )
+    def stop(self):
+        """
+        Stops the map processing pipeline and cleans up resources.
+        """
+        if self._map_string_provider:
+            self._map_string_provider.stop()
+        if self._factorio_path_provider:
+            self._factorio_path_provider.stop()
+        log.info("👋 Controller stopped successfully.")
+        self._running = False
 
-    def _start_pipeline(self, map_string: str):
-        self._on_start()
+    def start(self):
+        """
+        Starts the PreviewController to process map strings and Factorio paths asynchronously.
+        """
 
-        success = self._start_preview_generator(map_string)
-        if success is None:
-            return  # Aborted, no sound
-        if not success:
-            self._on_failure()
-            return
+        def on_new_map_string(map_string: str):
+            log.info(f"📥 Received new map string: {map_string}")
+            self._event_queue.put(("map_string", map_string))
 
-        success = self._start_uploader()
-        if success is None:
-            return  # Aborted, no sound
-        if not success:
-            self._on_failure()
-            return
+        def on_new_factorio_path(factorio_path: Path):
+            log.info(f"📍 Detected new Factorio path: {factorio_path}")
+            self._event_queue.put(("factorio_path", factorio_path))
 
-        self._on_success()
+        self._map_string_provider = get_map_string_provider(on_new_map_string)
+        self._factorio_path_provider = get_factorio_path_provider(on_new_factorio_path)
 
-    def run(self):
-        log.info("🧠 Controller initialized. Listening for map exchange strings...")
-        try:
-            while True:
-                map_string = self._provider.wait_for_map_string()
-                log.info("📥 New map exchange string received.")
+        self._map_string_provider.start()
+        self._factorio_path_provider.start()
 
-                # Cancel any running job
-                if self._worker_thread and self._worker_thread.is_alive():
-                    log.info("🧹 Interrupting previous pipeline...")
-                    self._stop_preview_generator()
-                    self._stop_uploader()
-
-                # Start new pipeline thread
-                thread_name = f"Worker-{self._worker_counter}"
-                self._worker_counter += 1
-
-                self._worker_thread = Thread(
-                    target=self._start_pipeline,
-                    args=(map_string,),
-                    name=thread_name,
-                )
-                self._worker_thread.start()
-
-        except KeyboardInterrupt:
-            log.info("🛑 Controller interrupted by user.")
-        finally:
-            self._stop_preview_generator()
-            self._stop_uploader()
-            log.info("👋 Controller shutdown complete.")
+        self._running = True
+        self._process_events()

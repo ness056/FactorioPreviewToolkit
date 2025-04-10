@@ -6,21 +6,22 @@ import threading
 from contextlib import contextmanager
 from io import TextIOWrapper
 
-# Thread-local storage for nesting level
+# Thread-local storage for nesting level (per thread)
 _nesting = threading.local()
-_nesting.level = 0
 
 
 def get_logging_indent() -> str:
     level = getattr(_nesting, "level", 0)
     if level == 0:
         return ""
-    # return "    " * (level - 1) + " └─"
-    return "   " * level
+    return "   " * level  # Indentation string
 
 
 @contextmanager
 def log_section(title: str):
+    if not hasattr(_nesting, "level"):
+        _nesting.level = 0
+
     log.info(title)
     _nesting.level += 1
     try:
@@ -30,6 +31,8 @@ def log_section(title: str):
 
 
 def set_logging_indent(level: int):
+    if not hasattr(_nesting, "level"):
+        _nesting.level = 0
     _nesting.level = max(0, level)
 
 
@@ -44,17 +47,17 @@ class IndentedFormatter(logging.Formatter):
         original_msg = super().format(record)
         message = record.getMessage()
 
-        formatted_msg = f"{record.asctime} {tag:<24} {level}: {message}"
+        formatted_msg = f"{record.asctime} {tag:<30} {level}: {message}"
         if prefix and record.levelno >= logging.INFO:
             return formatted_msg.replace(message, f"{prefix}{message}")
         return formatted_msg
 
 
 def setup_logger() -> logging.Logger:
-    # Force UTF-8 output on stdout/stderr (if needed)
-    if sys.stdout.encoding.lower() != "utf-8":
+    # Ensure UTF-8 encoding for stdout/stderr
+    if sys.stdout.encoding is None or sys.stdout.encoding.lower() != "utf-8":
         sys.stdout = TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-    if sys.stderr.encoding.lower() != "utf-8":
+    if sys.stderr.encoding is None or sys.stderr.encoding.lower() != "utf-8":
         sys.stderr = TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
     formatter = IndentedFormatter(
