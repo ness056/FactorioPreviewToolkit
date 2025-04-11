@@ -8,11 +8,12 @@ from pydantic import BaseModel, field_validator, model_validator
 class Settings(BaseModel):
     # === Factorio Location ===
     factorio_locator_method: str  # fixed_path or active_window
-    factorio_folder: Optional[Path] = None  # Required only for fixed_path
-    factorio_executable: Optional[Path] = None
+    fixed_path_factorio_executable: Optional[Path] = None  # Path to Factorio executable
+    active_window_poll_interval_in_seconds: Optional[int] = (
+        2  # Poll interval for active window method
+    )
 
     # === Script Output and Previews ===
-    script_output_folder: Path
     map_preview_size: int
     previews_output_folder: Path
     planet_names: List[str]
@@ -70,8 +71,10 @@ class Settings(BaseModel):
     def validate_if_required(self):
         method = self.factorio_locator_method
         if method == "fixed_path":
-            if not self.factorio_folder:
-                raise ValueError("factorio_folder must be set when using 'fixed_path'")
+            if not self.fixed_path_factorio_executable:
+                raise ValueError(
+                    "fixed_path_factorio_executable must be set when using 'fixed_path'"
+                )
         return self
 
     @field_validator("planet_names")
@@ -95,8 +98,6 @@ class Settings(BaseModel):
 
     @field_validator("factorio_locator_method")
     def validate_locator_method(cls, v):
-        if v == "config":
-            return "fixed_path"
         if v not in {"fixed_path", "active_window"}:
             raise ValueError(
                 "factorio_locator_method must be 'fixed_path' or 'active_window'"
@@ -105,30 +106,11 @@ class Settings(BaseModel):
 
     @model_validator(mode="after")
     def resolve_executables(self):
-        # Factorio: only resolve for fixed_path
         if self.factorio_locator_method == "fixed_path":
-            folder = self.factorio_folder
-            if not folder:
-                raise ValueError("factorio_folder is missing for fixed_path")
-
-            if sys.platform.startswith("win"):
-                exe = folder / "bin" / "x64" / "factorio.exe"
-            elif sys.platform.startswith("darwin"):
-                if folder.is_dir() and (folder / "Factorio.app").exists():
-                    folder = folder / "Factorio.app"
-                exe = (
-                    folder / "Contents" / "MacOS" / "factorio"
-                    if folder.name.endswith(".app")
-                    else folder / "bin" / "x64" / "factorio"
-                )
-            elif sys.platform.startswith("linux"):
-                exe = folder / "bin" / "x64" / "factorio"
-            else:
-                raise RuntimeError("Unsupported platform.")
-
-            if not exe.exists():
+            exe = self.fixed_path_factorio_executable
+            if not exe or not exe.exists():
                 raise ValueError(f"Factorio executable not found: {exe}")
-            self.factorio_executable = exe
+            self.fixed_path_factorio_executable = exe
 
         # Rclone: always resolve
         name = "rclone.exe" if sys.platform.startswith("win") else "rclone"

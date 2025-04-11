@@ -2,8 +2,8 @@ import json
 from pathlib import Path
 
 from src.preview_generator.factorio_interface import run_factorio_command
-from src.shared import shared_constants
 from src.shared.config import Config
+from src.shared.shared_constants import constants
 from src.shared.structured_logger import log, log_section
 
 
@@ -24,7 +24,7 @@ def _extract_seed(settings_path: Path) -> int:
 
 
 def prepare_preview_generation() -> tuple[Path, int]:
-    settings_path = Path(shared_constants.map_gen_settings_filename)
+    settings_path = Path(constants.MAP_GEN_SETTINGS_PATH)
     _extract_seed(settings_path)
     preview_width = Config.get().map_preview_size
     return settings_path, preview_width

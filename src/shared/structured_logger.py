@@ -47,7 +47,7 @@ class IndentedFormatter(logging.Formatter):
         original_msg = super().format(record)
         message = record.getMessage()
 
-        formatted_msg = f"{record.asctime} {tag:<30} {level}: {message}"
+        formatted_msg = f"{record.asctime} {tag:<32} {level}: {message}"
         if prefix and record.levelno >= logging.INFO:
             return formatted_msg.replace(message, f"{prefix}{message}")
         return formatted_msg
