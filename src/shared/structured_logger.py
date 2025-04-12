@@ -3,6 +3,7 @@
 import logging
 import sys
 import threading
+from collections.abc import Iterator
 from contextlib import contextmanager
 from io import TextIOWrapper
 
@@ -18,7 +19,7 @@ def get_logging_indent() -> str:
 
 
 @contextmanager
-def log_section(title: str):
+def log_section(title: str) -> Iterator[None]:
     if not hasattr(_nesting, "level"):
         _nesting.level = 0
 
@@ -30,21 +31,21 @@ def log_section(title: str):
         _nesting.level = max(0, _nesting.level - 1)
 
 
-def set_logging_indent(level: int):
+def set_logging_indent(level: int) -> None:
     if not hasattr(_nesting, "level"):
         _nesting.level = 0
     _nesting.level = max(0, level)
 
 
 class IndentedFormatter(logging.Formatter):
-    def format(self, record):
+    def format(self, record: logging.LogRecord) -> str:
         pid_part = f"PID:{record.process:>5}"
         thread_part = f"{record.threadName}"
         tag = f"[{pid_part}, {thread_part}]"
         level = f"{record.levelname:<5}"
 
         prefix = get_logging_indent()
-        original_msg = super().format(record)
+        super().format(record)
         message = record.getMessage()
 
         formatted_msg = f"{record.asctime} {tag:<32} {level}: {message}"

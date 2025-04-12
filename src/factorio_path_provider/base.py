@@ -1,6 +1,6 @@
+import collections
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Callable
 
 
 class FactorioPathProvider(ABC):
@@ -11,7 +11,7 @@ class FactorioPathProvider(ABC):
     whenever the executable path is changed.
     """
 
-    def __init__(self, on_new_factorio_path: Callable[[Path], None]):
+    def __init__(self, on_new_factorio_path: collections.abc.Callable[[Path], None]):
         self._on_new_factorio_path = on_new_factorio_path
 
     @abstractmethod

@@ -6,25 +6,27 @@ from src.shared.structured_logger import log, log_section
 from src.uploader.base_uploader import BaseUploader
 
 
+def _is_rclone_configured(remote_name: str) -> bool:
+    rclone = Config.get().rclone_executable
+    result = subprocess.run([rclone, "listremotes"], capture_output=True, text=True)
+    remotes = result.stdout.strip().splitlines()
+    return any(remote_name + ":" == remote for remote in remotes)
+
+
+def _open_rclone_config() -> None:
+    rclone = Config.get().rclone_executable
+    log.info("🔧 Opening rclone config interface...")
+
+    try:
+        subprocess.run([rclone, "config"], check=True)
+    except subprocess.CalledProcessError as e:
+        log.error("❌ Failed to launch rclone config.")
+        log.error(f"stdout:\n{e.stdout}")
+        log.error(f"stderr:\n{e.stderr}")
+        raise
+
+
 class RcloneUploader(BaseUploader):
-
-    def _is_rclone_configured(self, remote_name: str) -> bool:
-        rclone = Config.get().rclone_executable
-        result = subprocess.run([rclone, "listremotes"], capture_output=True, text=True)
-        remotes = result.stdout.strip().splitlines()
-        return any(remote_name + ":" == remote for remote in remotes)
-
-    def _open_rclone_config(self) -> None:
-        rclone = Config.get().rclone_executable
-        log.info("🔧 Opening rclone config interface...")
-
-        try:
-            subprocess.run([rclone, "config"], check=True)
-        except subprocess.CalledProcessError as e:
-            log.error("❌ Failed to launch rclone config.")
-            log.error(f"stdout:\n{e.stdout}")
-            log.error(f"stderr:\n{e.stderr}")
-            raise
 
     def upload_single(self, local_path: Path, remote_filename: str) -> str:
         config = Config.get()
@@ -34,10 +36,12 @@ class RcloneUploader(BaseUploader):
         remote_target = f"{remote_name}:{remote_folder}"
         full_remote_path = f"{remote_target}/{remote_filename}"
 
-        if not self._is_rclone_configured(remote_name):
+        if not _is_rclone_configured(remote_name):
             log.warning(f"⚠️ Rclone remote '{remote_name}' is not configured.")
-            self._open_rclone_config()
-            raise RuntimeError(f"Rclone remote '{remote_name}' not configured.")
+            _open_rclone_config()
+            raise RuntimeError(
+                f"Rclone remote '{remote_name}' was not configured. Run 'rclone config' and restart the application"
+            )
 
         with log_section(f"⬆️ Uploading {local_path.name} to {remote_target}..."):
             try:

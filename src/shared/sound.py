@@ -4,6 +4,8 @@ import contextlib
 import os
 from pathlib import Path
 
+from src.shared.structured_logger import log
+
 # Suppress stdout and stderr while importing and initializing pygame
 with open(os.devnull, "w") as devnull, contextlib.redirect_stdout(
     devnull
@@ -23,7 +25,7 @@ def _play_sound(path: Path, volume: float = 0.5) -> None:
         pygame.mixer.music.play()
         while pygame.mixer.music.get_busy():
             pygame.time.wait(100)
-    except Exception as e:
+    except Exception:
         log.warning(f"⚠️ Failed to play sound")
         raise
 

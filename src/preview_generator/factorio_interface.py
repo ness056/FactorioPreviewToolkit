@@ -1,23 +1,29 @@
 import subprocess
-import sys
+import time
 from pathlib import Path
-from typing import List
 
 from src.shared.shared_constants import constants
 from src.shared.structured_logger import log
 
 
-def get_factorio_executable(factorio_base_path: Path) -> Path:
-    """Returns the full path to the Factorio executable, OS-specific."""
-    if sys.platform.startswith("win"):
-        return factorio_base_path / "bin" / "x64" / "factorio.exe"
-    elif sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
-        return factorio_base_path  # User must provide correct path
-    else:
-        raise RuntimeError(f"Unsupported platform: {sys.platform}")
+def wait_for_factorio_lock_to_release(timeout_in_sec: int = 30) -> bool:
+    start_time = time.time()
+    lock_file = constants.FACTORIO_LOCK_PATH
+    while lock_file.exists():
+        log.info(f"📋 Waiting for '{lock_file}' release.")
+        elapsed_time = time.time() - start_time
+        if elapsed_time > timeout_in_sec:
+            log.error(
+                f"❌ Timeout: Lock file '{lock_file}' still exists after {timeout_in_sec} seconds."
+            )
+            raise TimeoutError(
+                f"Lock file '{lock_file}' still exists after {timeout_in_sec} seconds."
+            )
+        time.sleep(1)
+    return True
 
 
-def run_factorio_command(factorio_executable_path: Path, args: List[str]) -> None:
+def run_factorio_command(factorio_executable_path: Path, args: list[str]) -> None:
     """Executes Factorio with the given executable path, config file, and CLI arguments."""
 
     # Hardcoding the config path for now
@@ -39,6 +45,7 @@ def run_factorio_command(factorio_executable_path: Path, args: List[str]) -> Non
     ] + resolved_args  # Factorio path, --config, config file, then other args
 
     try:
+        wait_for_factorio_lock_to_release()
         subprocess.run(cmd, check=True, capture_output=True, text=True)
     except FileNotFoundError:
         log.error("❌ Factorio executable not found.")

@@ -1,22 +1,23 @@
 import sys
 from pathlib import Path
-from typing import Optional, List
+from typing import Literal
 
 from pydantic import BaseModel, field_validator, model_validator
+from pydantic_core.core_schema import FieldValidationInfo
 
 
 class Settings(BaseModel):
     # === Factorio Location ===
-    factorio_locator_method: str  # fixed_path or active_window
-    fixed_path_factorio_executable: Optional[Path] = None  # Path to Factorio executable
-    active_window_poll_interval_in_seconds: Optional[int] = (
+    factorio_locator_method: Literal["fixed_path", "active_window"]
+    fixed_path_factorio_executable: Path | None = None  # Path to Factorio executable
+    active_window_poll_interval_in_seconds: int | None = (
         2  # Poll interval for active window method
     )
 
     # === Script Output and Previews ===
     map_preview_size: int
     previews_output_folder: Path
-    planet_names: List[str]
+    planet_names: list[str]
 
     # === Sound Settings ===
     sound_start_file: Path
@@ -31,16 +32,27 @@ class Settings(BaseModel):
     map_exchange_file_path: Path
 
     # === Upload Settings ===
-    upload_method: str
+    upload_method: Literal["rclone", "none"]
     rclone_folder: Path
     rclone_remote_service: str
     upload_remote_folder: Path
-    rclone_executable: Optional[Path] = None
+    rclone_executable: Path | None = None
+
+    class Config:
+        frozen = True
+
+    @model_validator(mode="before")
+    def set_rclone_executable(cls, values):
+        rclone_folder = Path(values.get("rclone_folder"))
+        if rclone_folder:
+            name = "rclone.exe" if sys.platform.startswith("win") else "rclone"
+            values["rclone_executable"] = rclone_folder / name
+        return values
 
     # === Validators ===
 
     @field_validator("map_preview_size")
-    def must_be_positive(cls, v):
+    def must_be_positive(cls, v: int) -> int:
         if v <= 0:
             raise ValueError("map_preview_size must be a positive integer")
         return v
@@ -50,9 +62,13 @@ class Settings(BaseModel):
         "sound_volume_success_file",
         "sound_volume_failure_file",
     )
-    def volumes_between_0_and_1(cls, v, info):
+    def volumes_between_0_and_1(cls, v: float, info: FieldValidationInfo) -> float:
         if not (0.0 <= v <= 1.0):
-            raise ValueError(f"{info.field_name} must be between 0.0 and 1.0")
+            # Access alias directly from info.data
+            alias = info.data.get(
+                "alias", "unknown field"
+            )  # Default to 'unknown field' if alias not found
+            raise ValueError(f"{alias} must be between 0.0 and 1.0")
         return v
 
     @field_validator(
@@ -62,61 +78,59 @@ class Settings(BaseModel):
         "previews_output_folder",
         "rclone_folder",
     )
-    def path_must_exist(cls, v: Path, info):
+    def path_must_exist(cls, v: Path, info: FieldValidationInfo) -> Path:
         if not v.exists():
-            raise ValueError(f"{info.field_name} does not exist: {v}")
+            # Accessing the alias via the field's metadata (through info.data)
+            alias = info.data.get(
+                "alias", "unknown field"
+            )  # Default to 'unknown field' if alias is not found
+            raise ValueError(f"{alias} does not exist: {v}")
         return v.resolve()
 
-    @model_validator(mode="after")
-    def validate_if_required(self):
-        method = self.factorio_locator_method
-        if method == "fixed_path":
-            if not self.fixed_path_factorio_executable:
-                raise ValueError(
-                    "fixed_path_factorio_executable must be set when using 'fixed_path'"
-                )
-        return self
+    @field_validator("rclone_executable")
+    def check_rclone_executable_exists(
+        cls, v: Path | None, info: FieldValidationInfo
+    ) -> Path | None:
+        if info.data.get("upload_method") == "rclone":
+            if not v or not v.exists():
+                raise ValueError(f"rclone executable not found at {v}")
+        return v
+
+    @field_validator("fixed_path_factorio_executable")
+    def check_factorio_executable_exists(
+        cls, v: Path | None, info: FieldValidationInfo
+    ) -> Path | None:
+        if (
+            info.data.get("factorio_locator_method") == "fixed_path"
+            and v
+            and not v.exists()
+        ):
+            raise ValueError(f"Factorio executable not found at {v}")
+        return v
 
     @field_validator("planet_names")
-    def planets_cannot_be_empty(cls, v):
+    def planets_cannot_be_empty(cls, v: list[str]) -> list[str]:
         if not v:
             raise ValueError("planet_names cannot be empty")
         return v
 
     @field_validator("upload_method")
-    def check_upload_method(cls, v):
+    def check_upload_method(cls, v: str) -> str:
         if v not in ("rclone", "none"):
             raise ValueError("upload_method must be 'rclone' or 'none'")
         return v
 
     @field_validator("map_exchange_input_method")
-    def validate_map_method(cls, v):
+    def validate_map_method(cls, v: str) -> str:
         valid = {"clipboard_auto", "clipboard_hotkey", "file_hotkey", "dialog_hotkey"}
         if v not in valid:
             raise ValueError(f"Invalid map_exchange_input_method: {v}")
         return v
 
     @field_validator("factorio_locator_method")
-    def validate_locator_method(cls, v):
+    def validate_locator_method(cls, v: str) -> str:
         if v not in {"fixed_path", "active_window"}:
             raise ValueError(
                 "factorio_locator_method must be 'fixed_path' or 'active_window'"
             )
         return v
-
-    @model_validator(mode="after")
-    def resolve_executables(self):
-        if self.factorio_locator_method == "fixed_path":
-            exe = self.fixed_path_factorio_executable
-            if not exe or not exe.exists():
-                raise ValueError(f"Factorio executable not found: {exe}")
-            self.fixed_path_factorio_executable = exe
-
-        # Rclone: always resolve
-        name = "rclone.exe" if sys.platform.startswith("win") else "rclone"
-        rclone_exec = self.rclone_folder / name
-        if not rclone_exec.exists():
-            raise ValueError(f"rclone executable not found: {rclone_exec}")
-        self.rclone_executable = rclone_exec
-
-        return self

@@ -1,5 +1,5 @@
+import collections
 from pathlib import Path
-from typing import Callable, Optional
 
 import psutil
 import win32gui
@@ -14,10 +14,10 @@ class WindowsActiveWindowProvider(ActiveWindowProvider):
     Windows-specific implementation of ActiveWindowProvider.
     """
 
-    def __init__(self, on_new_factorio_path: Callable[[Path], None]):
+    def __init__(self, on_new_factorio_path: collections.abc.Callable[[Path], None]):
         super().__init__(on_new_factorio_path)
 
-    def get_factorio_executable_path(self) -> Optional[Path]:
+    def get_factorio_executable_path(self) -> Path | None:
         try:
             hwnd = win32gui.GetForegroundWindow()
             if hwnd == 0:

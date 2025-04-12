@@ -5,7 +5,6 @@ import zipfile
 from pathlib import Path
 
 from src.preview_generator.factorio_interface import run_factorio_command
-from src.shared.config import Config
 from src.shared.shared_constants import constants
 from src.shared.structured_logger import log, log_section
 
@@ -43,7 +42,7 @@ def _create_dummy_save(factorio_path: Path) -> None:
         log.info("✅ Dummy save created.")
 
 
-def _update_control_lua(save_folder: Path, exchange_string: str) -> None:
+def _update_control_lua(exchange_string: str) -> None:
     with log_section("🛠️ Updating control.lua with exchange string..."):
         control_lua = constants.CONTROL_LUA_PATH
         if not control_lua.exists():
@@ -70,7 +69,7 @@ def _update_control_lua(save_folder: Path, exchange_string: str) -> None:
             log.info("✅ control.lua already up to date.")
 
 
-def _extract_map_gen_settings_from_combined_json(script_output_path: Path) -> None:
+def _extract_map_gen_settings_from_combined_json() -> None:
     with log_section("📤 Extracting map-gen-settings from combined JSON..."):
         combined_path = constants.COMBINED_MAP_GEN_SETTINGS_PATH
         if not combined_path.exists():
@@ -94,9 +93,8 @@ def _extract_map_gen_settings_from_combined_json(script_output_path: Path) -> No
         log.info(f"✅ Extracted to {constants.MAP_GEN_SETTINGS_PATH}")
 
 
-def _export_map_gen_settings_via_benchmark(
-    factorio_path: Path, save_folder: Path
-) -> None:
+def _export_map_gen_settings_via_benchmark(factorio_path: Path) -> None:
+    save_folder = constants.DUMMY_SAVE_TO_CREATE_MAP_GEN_SETTINGS_PATH
     with log_section("🧪 Running Factorio to export map-gen-settings..."):
         run_factorio_command(
             factorio_path,
@@ -113,13 +111,7 @@ def _export_map_gen_settings_via_benchmark(
 def convert_exchange_string_to_settings(factorio_path: Path, map_string: str) -> None:
     with log_section("🧩 Converting map exchange string to map-gen-settings..."):
         _create_dummy_save(factorio_path)
-        _update_control_lua(
-            constants.DUMMY_SAVE_TO_CREATE_MAP_GEN_SETTINGS_PATH, map_string
-        )
-        _export_map_gen_settings_via_benchmark(
-            factorio_path, constants.DUMMY_SAVE_TO_CREATE_MAP_GEN_SETTINGS_PATH
-        )
-        _extract_map_gen_settings_from_combined_json(
-            Config.get().previews_output_folder
-        )
+        _update_control_lua(map_string)
+        _export_map_gen_settings_via_benchmark(factorio_path)
+        _extract_map_gen_settings_from_combined_json()
         log.info("✅ Map-gen-settings extracted.")

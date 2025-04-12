@@ -1,7 +1,6 @@
 import queue
 from pathlib import Path
 from queue import Queue
-from typing import Optional
 
 from src.controller.map_processing_pipeline import MapProcessingPipeline
 from src.factorio_path_provider.factory import get_factorio_path_provider
@@ -26,14 +25,14 @@ class PreviewController:
         self._factorio_path_provider = None
         self._map_string_provider = None
 
-        self._latest_factorio_path: Optional[Path] = None
-        self._latest_map_string: Optional[str] = None
+        self._latest_factorio_path: Path | None = None
+        self._latest_map_string: str | None = None
         self._map_string_analysed = False
 
         self._event_queue = Queue()
         self._map_processing_pipeline = MapProcessingPipeline()
 
-    def _process_events(self):
+    def _process_events(self) -> None:
         """
         Processes events from the event queue. This method listens for new map strings and Factorio paths,
         and triggers the map processing pipeline when both are available.
@@ -58,7 +57,7 @@ class PreviewController:
             ):
                 self._start_map_processing()
 
-    def _start_map_processing(self):
+    def _start_map_processing(self) -> None:
         """
         Starts the map processing pipeline with the latest map string and Factorio path.
         """
@@ -67,7 +66,7 @@ class PreviewController:
             self._latest_factorio_path, self._latest_map_string
         )
 
-    def stop(self):
+    def stop(self) -> None:
         """
         Stops the map processing pipeline and cleans up resources.
         """
@@ -78,7 +77,7 @@ class PreviewController:
         log.info("👋 Controller stopped successfully.")
         self._running = False
 
-    def start(self):
+    def start(self) -> None:
         """
         Starts the PreviewController to process map strings and Factorio paths asynchronously.
         """

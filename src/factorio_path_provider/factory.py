@@ -1,6 +1,6 @@
+import collections
 import platform
 from pathlib import Path
-from typing import Callable
 
 from src.factorio_path_provider.base import FactorioPathProvider
 from src.factorio_path_provider.fixed_path_provider import FixedPathProvider
@@ -12,7 +12,7 @@ from src.shared.structured_logger import log
 
 
 def get_factorio_path_provider(
-    on_new_factorio_path: Callable[[Path], None],
+    on_new_factorio_path: collections.abc.Callable[[Path], None],
 ) -> FactorioPathProvider:
     config = Config.get()
     method = config.factorio_locator_method

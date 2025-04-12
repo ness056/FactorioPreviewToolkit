@@ -14,7 +14,8 @@ class Constants:
     BASE_ASSETS_DIR = Path("./assets")
 
     # Subdirectories under base directories
-    FACTORIO_WRITE_PATH = BASE_TEMP_DIR / "data"
+    FACTORIO_WRITE_DATA_PATH = BASE_TEMP_DIR / "data"
+    FACTORIO_LOCK_PATH = FACTORIO_WRITE_DATA_PATH / ".lock"
     DUMMY_SAVE_DIR = BASE_TEMP_DIR / "dummy-save-to-create-map-gen-settings"
     CONTROL_LUA_PATH = DUMMY_SAVE_DIR / "control.lua"
     SCRIPT_OUTPUT_DIR = BASE_TEMP_DIR / "data" / "script-output"
@@ -27,8 +28,8 @@ class Constants:
     )
     MAP_GEN_SETTINGS_PATH = BASE_TEMP_DIR / "map-gen-settings.json"
 
-    def __init__(self):
-        self._link_output_path = None
+    def __init__(self) -> None:
+        self._link_output_path: Path | None = None
 
     @property
     def FACTORIO_CONFIG_PATH(self) -> Path:
@@ -45,7 +46,7 @@ class Constants:
                     ; version=12
                     [path]
                     read-data=__PATH__executable__/../../data
-                    write-data={self.FACTORIO_WRITE_PATH}
+                    write-data={self.FACTORIO_WRITE_DATA_PATH}
                     """
                 )
                 with open(config_path, "w") as config_file:
@@ -61,14 +62,9 @@ class Constants:
         """
         if self._link_output_path is None:
             config = Config.get()
-            if config.preview_output_folder:
-                self._link_output_path = (
-                    Path(config.preview_output_folder) / "output_links.txt"
-                )
-            else:
-                raise ValueError(
-                    "preview_output_folder is not set in the configuration."
-                )
+            self._link_output_path = (
+                Path(config.previews_output_folder) / "output_links.txt"
+            )
         return self._link_output_path
 
 

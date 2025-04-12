@@ -1,8 +1,7 @@
 # src/map_string_provider/clipboard_provider.py
-
+import collections
 import threading
 import time
-from typing import Callable
 
 import pyperclip
 
@@ -13,7 +12,9 @@ from src.shared.utils import is_valid_map_string
 
 class ClipboardMapStringProvider(MapStringProvider):
     def __init__(
-        self, on_new_map_string: Callable[[str], None], poll_interval: float = 0.5
+        self,
+        on_new_map_string: collections.abc.Callable[[str], None],
+        poll_interval: float = 0.5,
     ):
         super().__init__(on_new_map_string)
         self._poll_interval = poll_interval
@@ -36,7 +37,7 @@ class ClipboardMapStringProvider(MapStringProvider):
         self._thread.join()
         log.info("✅ Clipboard Monitor stopped.")
 
-    def _run(self):
+    def _run(self) -> None:
         with log_section("📋 Monitoring clipboard for new map exchange strings..."):
             while not self._stop_flag.is_set():
                 try:

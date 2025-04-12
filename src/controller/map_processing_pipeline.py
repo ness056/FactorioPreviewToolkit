@@ -1,6 +1,5 @@
 from pathlib import Path
 from threading import Lock, Thread
-from typing import Optional
 
 from src.controller.single_process_executor import (
     SubprocessStatus,
@@ -19,10 +18,10 @@ class MapProcessingPipeline:
     """
 
     def __init__(self):
-        self.generator_executor: Optional[SingleProcessExecutor] = None
-        self.uploader_executor: Optional[SingleProcessExecutor] = None
+        self.generator_executor: SingleProcessExecutor | None = None
+        self.uploader_executor: SingleProcessExecutor | None = None
         self._lock = Lock()
-        self._worker_thread: Optional[Thread] = None
+        self._worker_thread: Thread | None = None
         self._worker_ID = 0
 
     def run_async(self, factorio_path: Path, map_string: str) -> None:
@@ -40,13 +39,13 @@ class MapProcessingPipeline:
             self._worker_ID += 1
             self._worker_thread = Thread(
                 target=self._execute_pipeline,
-                args=(factorio_path, map_string),
+                args=(),
                 name=thread_name,
                 daemon=True,
             )
             self._worker_thread.start()
 
-    def _execute_pipeline(self, factorio_path: Path, map_string: str):
+    def _execute_pipeline(self):
         with self._lock:
 
             play_start_sound()
@@ -82,7 +81,7 @@ class MapProcessingPipeline:
             self.uploader_executor.stop()
 
         if self._worker_thread and self._worker_thread.is_alive():
-            log.warning("⚠️ Pipeline is already running. Aborting...")
+            log.info("⚠️ Pipeline is already running. Aborting...")
             self._worker_thread.join(timeout=1)
             if self._worker_thread.is_alive():
                 log.error(

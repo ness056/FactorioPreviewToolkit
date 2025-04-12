@@ -41,7 +41,6 @@ def generate_planet_previews(
                 _generate_preview_for_planet(
                     factorio_base_path, planet, settings_path, preview_width
                 )
-                log.info("✅ Preview generated")
             except Exception:
                 log.error(f"❌ Failed to generate preview for {planet}")
                 raise
@@ -60,6 +59,7 @@ def _generate_preview_for_planet(
     ]
 
     run_factorio_command(factorio_base_path, args)
+    log.info(f"✅ Preview generated at {output}")
 
 
 def generate_previews_from_settings(factorio_base_path: Path) -> None:

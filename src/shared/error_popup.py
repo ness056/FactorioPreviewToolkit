@@ -5,7 +5,7 @@ import pyperclip
 
 
 def show_error_popup(title: str, message: str) -> None:
-    def copy_to_clipboard():
+    def copy_to_clipboard() -> None:
         pyperclip.copy(message)
 
     root = tk.Tk()

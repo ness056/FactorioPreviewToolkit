@@ -2,7 +2,7 @@ from src.shared.structured_logger import log, log_section
 from src.uploader.factory import get_uploader
 
 
-def main():
+def main() -> None:
     log_section("🚀 Uploader started.")
     uploader = get_uploader()
     uploader.upload_all()

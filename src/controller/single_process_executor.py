@@ -2,7 +2,6 @@ import subprocess
 import sys
 from enum import Enum, auto
 from threading import Lock
-from typing import Optional
 
 from src.shared.structured_logger import log
 
@@ -23,7 +22,7 @@ class SingleProcessExecutor:
         """
         self._process_name = process_name
         self._args = args
-        self._active_process: Optional[subprocess.Popen] = None
+        self._active_process: subprocess.Popen[str] | None = None
         self._status = SubprocessStatus.NOT_RUN
         self._lock = Lock()  # Lock to ensure only one subprocess runs at a time
 
@@ -51,8 +50,9 @@ class SingleProcessExecutor:
             self._status = SubprocessStatus.RUNNING
 
         try:
-            for line in self._active_process.stdout:
-                print(line, end="")  # Forward to console/log
+            if self._active_process.stdout:
+                for line in self._active_process.stdout:
+                    print(line, end="")
         except Exception:
             self._status = SubprocessStatus.FAILED
             log.error(f"❌ Failed to read {self._process_name} output.")
@@ -80,7 +80,7 @@ class SingleProcessExecutor:
                 SubprocessStatus.RUNNING,
                 SubprocessStatus.NOT_RUN,
             ]:
-                log.warning(f"⚠️ No active process to stop for {self._process_name}.")
+                log.info(f"⚠️ No active process to stop for {self._process_name}.")
                 return False
 
             # Kill the active subprocess if it's running

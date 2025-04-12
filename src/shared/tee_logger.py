@@ -1,24 +1,29 @@
-# shared/tee_logger.py
-
 import sys
 from pathlib import Path
+from typing import TextIO
 
 
 class TeeOutput:
     def __init__(self, path: Path):
         self.terminal = sys.__stdout__
-        self.log = open(path, "w", encoding="utf-8")  # Overwrite on new run
+        self.log: TextIO | None = open(
+            path, "w", encoding="utf-8"
+        )  # Type annotation added for the log
 
-    def write(self, message):
-        self.terminal.write(message)
-        self.log.write(message)
+    def write(self, message: str) -> None:
+        """Writes message to both terminal and log."""
+        if self.log and self.terminal:
+            self.terminal.write(message)
+            self.log.write(message)
 
-    def flush(self):
-        self.terminal.flush()
-        self.log.flush()
+    def flush(self) -> None:
+        """Flushes both terminal and log."""
+        if self.log and self.terminal:
+            self.terminal.flush()
+            self.log.flush()
 
 
-def enable_tee_logging(log_path: Path):
+def enable_tee_logging(log_path: Path) -> None:
     """
     Redirect stdout and stderr to both the console and a rotated log file.
     Rotates <log_path> → previous.log if it exists.

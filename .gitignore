@@ -1,8 +1,7 @@
 # === Project-Specific ===
 
-# Ignore everything in the Factorio folder, but keep the folder itself
-Factorio/*
-!Factorio/.gitkeep
+# Ignore everything in the temp_files folder
+temp_files/*
 
 # Ignore the dummy save folder completely
 factorio-preview-toolkit-dummy-save-to-create-map-gen-settings/
