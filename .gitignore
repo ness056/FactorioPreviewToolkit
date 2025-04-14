@@ -1,69 +1,86 @@
-# === Project-Specific ===
+# ==============================================================================
+# 📦 Project-Specific Ignores
+# ==============================================================================
 
-# Ignore everything in the temp_files folder
-temp_files/*
+# Temporary files and folders
+temp_files/
 
-# Ignore the dummy save folder completely
+# Dummy save folder for map-gen-settings generation
 factorio-preview-toolkit-dummy-save-to-create-map-gen-settings/
 
-# Viewer build artifacts
-Factorio Preview Viewer/viewer-config.js
-
-# Preview images (generated content)
+# Map preview images (output)
 previews/
-
-# Logs and temp
-uploader.log
-previous.log
-output_links.txt
 
 # Map generation config (regenerated)
 map-gen-settings.json
 
-# Ignore everything in the rclone folder, but keep the folder itself
-rclone/*
-!rclone/.gitkeep
-
-# Local HTML links file (optional, if generated)
+# Logs and runtime output
+uploader.log
+previous.log
 output_links.txt
 
-# Viewer build output (optional, only if built or compiled)
+# Viewer config and build artifacts
+Factorio Preview Viewer/viewer-config.js
 dist/
 build/
 
-# Ignore compiled/minified frontend assets (if using tooling later)
+# Compiled/minified frontend assets
 *.min.js
 *.min.css
 
-# VSCode and PyCharm project settings
-.vscode/
-.idea/
+# rclone sync folder (ignore all except .gitkeep)
+rclone/*
+!rclone/.gitkeep
 
-# === Python-wide ignores ===
+# ==============================================================================
+# 🐍 Python-Related Ignores
+# ==============================================================================
 
-# Ignore __pycache__ folders recursively
-**/__pycache__/
-
-# Byte-compiled / optimized / DLL files
+# Byte-compiled / optimized / cached files
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 
 # C extensions
 *.so
 
-# Distribution / packaging
-.Python
-build/
+# Python virtual environment (optional)
+.venv/
+env/
+ENV/
+
+# Packaging/build artifacts
+*.egg-info/
+.eggs/
 develop-eggs/
+build/
 dist/
 downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
 sdist/
-var/
 wheels/
 share/python-wheels/
+var/
+parts/
+lib/
+lib64/
+
+# Python interpreter environment marker
+.Python
+
+# ==============================================================================
+# 🧰 IDE / Editor Settings
+# ==============================================================================
+
+# VSCode and PyCharm
+.vscode/
+.idea/
+
+# Project metadata (optional lock or install files)
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Mac/Linux/Windows system files
+.DS_Store
+Thumbs.db
+desktop.ini
