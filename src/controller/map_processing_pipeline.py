@@ -17,7 +17,7 @@ class MapProcessingPipeline:
     is running, the previous job is interrupted as the result is no longer needed.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.generator_executor: SingleProcessExecutor | None = None
         self.uploader_executor: SingleProcessExecutor | None = None
         self._lock = Lock()
@@ -45,11 +45,14 @@ class MapProcessingPipeline:
             )
             self._worker_thread.start()
 
-    def _execute_pipeline(self):
+    def _execute_pipeline(self) -> None:
         with self._lock:
 
             play_start_sound()
 
+            assert (
+                self.generator_executor is not None
+            ), "Generator executor not set, but should have been set by caller"
             generator_status = self.generator_executor.run_subprocess()
             if generator_status == SubprocessStatus.KILLED:
                 return
@@ -57,6 +60,9 @@ class MapProcessingPipeline:
                 play_failure_sound()
                 return
 
+            assert (
+                self.uploader_executor is not None
+            ), "Uploader executor not set, but should have been set by caller"
             upload_status = self.uploader_executor.run_subprocess()
             if upload_status == SubprocessStatus.KILLED:
                 return
@@ -84,9 +90,5 @@ class MapProcessingPipeline:
             log.info("⚠️ Pipeline is already running. Aborting...")
             self._worker_thread.join(timeout=1)
             if self._worker_thread.is_alive():
-                log.error(
-                    "❌ Worker thread did not terminate in time. Raising exception."
-                )
-                raise TimeoutError(
-                    "Worker thread did not terminate within the expected time."
-                )
+                log.error("❌ Worker thread did not terminate in time. Raising exception.")
+                raise TimeoutError("Worker thread did not terminate within the expected time.")

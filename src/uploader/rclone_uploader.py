@@ -6,19 +6,27 @@ from src.shared.structured_logger import log, log_section
 from src.uploader.base_uploader import BaseUploader
 
 
+def _get_rclone_executable() -> Path:
+    rclone_executable = Config.get().rclone_executable
+    assert (
+        rclone_executable is not None
+    ), "rclone_executable must not be None when using RcloneUploader"
+    return rclone_executable
+
+
 def _is_rclone_configured(remote_name: str) -> bool:
-    rclone = Config.get().rclone_executable
-    result = subprocess.run([rclone, "listremotes"], capture_output=True, text=True)
+    rclone_executable = _get_rclone_executable()
+    result = subprocess.run([rclone_executable, "listremotes"], capture_output=True, text=True)
     remotes = result.stdout.strip().splitlines()
     return any(remote_name + ":" == remote for remote in remotes)
 
 
 def _open_rclone_config() -> None:
-    rclone = Config.get().rclone_executable
+    rclone_executable = _get_rclone_executable()
     log.info("🔧 Opening rclone config interface...")
 
     try:
-        subprocess.run([rclone, "config"], check=True)
+        subprocess.run([rclone_executable, "config"], check=True)
     except subprocess.CalledProcessError as e:
         log.error("❌ Failed to launch rclone config.")
         log.error(f"stdout:\n{e.stdout}")
@@ -30,7 +38,7 @@ class RcloneUploader(BaseUploader):
 
     def upload_single(self, local_path: Path, remote_filename: str) -> str:
         config = Config.get()
-        rclone = Config.get().rclone_executable
+        rclone_executable = _get_rclone_executable()
         remote_name = config.rclone_remote_service
         remote_folder = config.upload_remote_folder
         remote_target = f"{remote_name}:{remote_folder}"
@@ -46,7 +54,7 @@ class RcloneUploader(BaseUploader):
         with log_section(f"⬆️ Uploading {local_path.name} to {remote_target}..."):
             try:
                 result = subprocess.run(
-                    [rclone, "copy", str(local_path), remote_target],
+                    [rclone_executable, "copy", str(local_path), remote_target],
                     check=True,
                     capture_output=True,
                     text=True,
@@ -67,7 +75,7 @@ class RcloneUploader(BaseUploader):
         with log_section("🌐 Generating shareable link..."):
             try:
                 result = subprocess.run(
-                    [rclone, "link", full_remote_path],
+                    [rclone_executable, "link", full_remote_path],
                     capture_output=True,
                     text=True,
                     check=True,
@@ -77,9 +85,7 @@ class RcloneUploader(BaseUploader):
                 # Handle Dropbox
                 if "dropbox.com" in share_url:
                     # Force raw preview link
-                    share_url = share_url.replace(
-                        "www.dropbox.com", "dl.dropboxusercontent.com"
-                    )
+                    share_url = share_url.replace("www.dropbox.com", "dl.dropboxusercontent.com")
                     share_url = share_url.replace("&dl=0", "")
                     share_url = share_url.replace("&dl=1", "")
 

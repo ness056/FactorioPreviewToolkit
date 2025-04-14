@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Any
 
 from pydantic import BaseModel, field_validator, model_validator
 from pydantic_core.core_schema import FieldValidationInfo
@@ -10,9 +10,7 @@ class Settings(BaseModel):
     # === Factorio Location ===
     factorio_locator_method: Literal["fixed_path", "active_window"]
     fixed_path_factorio_executable: Path | None = None  # Path to Factorio executable
-    active_window_poll_interval_in_seconds: int | None = (
-        2  # Poll interval for active window method
-    )
+    active_window_poll_interval_in_seconds: int = 2
 
     # === Script Output and Previews ===
     map_preview_size: int
@@ -42,9 +40,10 @@ class Settings(BaseModel):
         frozen = True
 
     @model_validator(mode="before")
-    def set_rclone_executable(cls, values):
-        rclone_folder = Path(values.get("rclone_folder"))
-        if rclone_folder:
+    def set_rclone_executable(cls, values: dict[str, Any]) -> dict[str, Any]:
+        raw_folder = values.get("rclone_folder")
+        if raw_folder is not None:
+            rclone_folder = Path(raw_folder)
             name = "rclone.exe" if sys.platform.startswith("win") else "rclone"
             values["rclone_executable"] = rclone_folder / name
         return values
@@ -106,6 +105,16 @@ class Settings(BaseModel):
             and not v.exists()
         ):
             raise ValueError(f"Factorio executable not found at {v}")
+        return v
+
+    @field_validator("active_window_poll_interval_in_seconds")
+    def check_poll_interval_if_active_window(
+        cls, v: int, info: FieldValidationInfo
+    ) -> int:
+        if info.data.get("factorio_locator_method") == "active_window" and v <= 0:
+            raise ValueError(
+                "active_window_poll_interval_in_seconds must be > 0 for active_window mode"
+            )
         return v
 
     @field_validator("planet_names")

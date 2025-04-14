@@ -1,5 +1,6 @@
 import argparse
 from pathlib import Path
+from typing import Sequence
 
 from pydantic import BaseModel, field_validator
 
@@ -17,9 +18,8 @@ class Args(BaseModel):
     factorio_path: Path
     map_string: str
 
-    # Validate factorio_path as an existing file (not directory)
     @field_validator("factorio_path")
-    def check_factorio_path(cls, v):
+    def check_factorio_path(cls, v: Path) -> Path:
         # Resolve relative path to absolute path
         v = v.resolve()
 
@@ -28,38 +28,27 @@ class Args(BaseModel):
             raise ValueError(f"Factorio path is invalid or does not exist: {v}")
         return v
 
-    # Validate the map_string with a custom regex
     @field_validator("map_string")
-    def check_map_string(cls, v):
-        if not is_valid_map_string(
-            v
-        ):  # Assuming you have a function is_valid_map_string
+    def check_map_string(cls, v: str) -> str:
+        if not is_valid_map_string(v):
             raise ValueError(f"Invalid map exchange string: {v}")
         return v
 
 
-# Step 2: Parse arguments and validate using Pydantic
-def parse_arguments(argv=None):
+def parse_arguments(argv: Sequence[str] | None = None) -> Args:
     parser = argparse.ArgumentParser(description="Factorio map preview generator")
-    parser.add_argument(
-        "factorio_path", type=Path, help="Path to Factorio installation directory"
-    )
-    parser.add_argument(
-        "map_string", type=str, help="Map exchange string to generate preview for"
-    )
+    parser.add_argument("factorio_path", type=Path, help="Path to Factorio installation directory")
+    parser.add_argument("map_string", type=str, help="Map exchange string to generate preview for")
     args = parser.parse_args(argv)
 
     return Args(**vars(args))
 
 
-def main(argv=None):
+def main(argv: Sequence[str] | None = None) -> None:
     with log_section("🚀 Preview Generator started. Processing map string..."):
         arguments = parse_arguments(argv)
-        convert_exchange_string_to_settings(
-            arguments.factorio_path, arguments.map_string
-        )
+        convert_exchange_string_to_settings(arguments.factorio_path, arguments.map_string)
         generate_previews_from_settings(arguments.factorio_path)
-
         log.info("✅ Preview Generator completed successfully.")
 
 
