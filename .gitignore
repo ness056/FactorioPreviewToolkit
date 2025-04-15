@@ -20,7 +20,7 @@ previous.log
 output_links.txt
 
 # Viewer config and build artifacts
-Factorio Preview Viewer/viewer-config.js
+viewer/viewer-config.js
 dist/
 build/
 

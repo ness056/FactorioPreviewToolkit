@@ -10,4 +10,8 @@ repos:
     hooks:
       - id: mypy
         args: [--strict]
+        additional_dependencies:
+          - types-psutil
+          - types-pyperclip
+          - pydantic[mypy]
         language_version: python3

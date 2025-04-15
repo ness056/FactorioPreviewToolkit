@@ -24,8 +24,10 @@ dev = [
     "black",
     "mypy",
     "types-psutil",
+    "types-pyperclip",
     "pyinstaller",
-    "pre-commit"
+    "pre-commit",
+    "pydantic[mypy]"
 ]
 
 # Optional CLI command for script users (if desired)
@@ -37,6 +39,10 @@ factorio-preview = "your_main_module.__main__:main"
 line-length = 100
 target-version = ["py310"]
 skip-string-normalization = false
+
+# Mypy configuration (helps plugin recognize Pydantic BaseModel correctly)
+[tool.mypy]
+plugins = ["pydantic.mypy"]
 
 # Tell setuptools to look in ./src for actual packages
 [tool.setuptools]
