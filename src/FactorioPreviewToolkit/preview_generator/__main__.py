@@ -1,3 +1,10 @@
+"""
+Main entry point for generating Factorio map previews from a map exchange string.
+
+Converts the exchange string to map-gen-settings,
+and runs preview generation for all configured planets.
+"""
+
 import argparse
 from pathlib import Path
 from typing import Sequence
@@ -15,27 +22,37 @@ from src.FactorioPreviewToolkit.shared.utils import is_valid_map_string
 
 
 class Args(BaseModel):
+    """
+    Validates CLI arguments using Pydantic.
+    """
+
     factorio_path: Path
     map_string: str
 
     @field_validator("factorio_path")
     def check_factorio_path(cls, v: Path) -> Path:
-        # Resolve relative path to absolute path
+        """
+        Validates that the Factorio path exists and points to a file.
+        """
         v = v.resolve()
-
-        # Check if the path exists and is a valid file (not a directory)
         if not v.exists() or not v.is_file():
             raise ValueError(f"Factorio path is invalid or does not exist: {v}")
         return v
 
     @field_validator("map_string")
     def check_map_string(cls, v: str) -> str:
+        """
+        Validates that the input is a valid map exchange string.
+        """
         if not is_valid_map_string(v):
             raise ValueError(f"Invalid map exchange string: {v}")
         return v
 
 
 def parse_arguments(argv: Sequence[str] | None = None) -> Args:
+    """
+    Parses and validates command-line arguments.
+    """
     parser = argparse.ArgumentParser(description="Factorio map preview generator")
     parser.add_argument("factorio_path", type=Path, help="Path to Factorio installation directory")
     parser.add_argument("map_string", type=str, help="Map exchange string to generate preview for")
@@ -45,6 +62,9 @@ def parse_arguments(argv: Sequence[str] | None = None) -> Args:
 
 
 def main(argv: Sequence[str] | None = None) -> None:
+    """
+    Runs the full preview generation pipeline from CLI arguments.
+    """
     with log_section("🚀 Preview Generator started. Processing map string..."):
         arguments = parse_arguments(argv)
         convert_exchange_string_to_settings(arguments.factorio_path, arguments.map_string)

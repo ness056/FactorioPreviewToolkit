@@ -3,6 +3,9 @@ from src.FactorioPreviewToolkit.uploader.factory import get_uploader
 
 
 def main() -> None:
+    """
+    Entry point for running the uploader standalone. Selects the uploader and starts the upload.
+    """
     log_section("🚀 Uploader started.")
     uploader = get_uploader()
     uploader.upload_all()

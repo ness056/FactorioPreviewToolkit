@@ -5,7 +5,14 @@ import pyperclip
 
 
 def show_error_popup(title: str, message: str) -> None:
+    """
+    Opens a simple Tkinter popup window displaying an error message with a copy-to-clipboard button.
+    """
+
     def copy_to_clipboard() -> None:
+        """
+        Copies the error message to the clipboard.
+        """
         pyperclip.copy(message)
 
     root = tk.Tk()

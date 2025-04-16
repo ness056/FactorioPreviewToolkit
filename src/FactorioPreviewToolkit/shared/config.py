@@ -8,11 +8,18 @@ from src.FactorioPreviewToolkit.shared.structured_logger import log, log_section
 
 
 class Config:
+    """
+    Loads and provides access to validated config values as a singleton Settings instance.
+    """
+
     _instance: Settings | None = None
     _path = Path(constants.PREVIEW_TOOLKIT_CONFIG_PATH)
 
     @classmethod
     def get(cls) -> Settings:
+        """
+        Returns the loaded Settings object, loading it from disk if needed.
+        """
         if cls._instance is None:
             cls._load()
             if cls._instance is None:
@@ -21,6 +28,10 @@ class Config:
 
     @classmethod
     def _load(cls) -> None:
+        """
+        Parses the config.ini file, flattens sections, normalizes data,
+        and validates it against the Settings model.
+        """
         with log_section("🔍 Initializing config..."):
             config_path = cls._path
 

@@ -1,9 +1,14 @@
+"""Entry point for the Factorio Preview Toolkit.
+
+This tool detects map exchange strings (e.g. from clipboard), generates
+preview images for all configured planets using the Factorio CLI, and optionally
+uploads them to a remote service like Dropbox.
+"""
+
+# enable_tee_logging()
+
 from src.FactorioPreviewToolkit.controller.controller import PreviewController
 from src.FactorioPreviewToolkit.shared.structured_logger import log
-from src.FactorioPreviewToolkit.shared.tee_logger import enable_tee_logging
-
-# Enable terminal + file logging before anything else
-enable_tee_logging()
 
 if __name__ == "__main__":
     log.info("🚀 Factorio preview toolkit started.")

@@ -1,7 +1,6 @@
 # src/map_string_provider/clipboard_provider.py
 import collections
 import threading
-import time
 
 import pyperclip
 
@@ -11,11 +10,19 @@ from src.FactorioPreviewToolkit.shared.utils import is_valid_map_string
 
 
 class ClipboardMapStringProvider(MapStringProvider):
+    """
+    Watches the system clipboard for valid map exchange strings.
+    Calls the callback when a new one is detected.
+    """
+
     def __init__(
         self,
         on_new_map_string: collections.abc.Callable[[str], None],
         poll_interval: float = 0.5,
     ):
+        """
+        Sets up the clipboard monitor and polling interval.
+        """
         super().__init__(on_new_map_string)
         self._poll_interval = poll_interval
         self._last_map_string = ""
@@ -27,17 +34,26 @@ class ClipboardMapStringProvider(MapStringProvider):
         )
 
     def start(self) -> None:
+        """
+        Starts the clipboard monitoring thread.
+        """
         log.info("🚀 Starting Clipboard Monitor...")
         self._stop_flag.clear()
         self._thread.start()
 
     def stop(self) -> None:
+        """
+        Stops the monitoring thread and waits for it to finish.
+        """
         log.info("🛑 Stopping Clipboard Monitor...")
         self._stop_flag.set()
         self._thread.join()
         log.info("✅ Clipboard Monitor stopped.")
 
     def _run(self) -> None:
+        """
+        Loop that checks the clipboard for new map exchange strings.
+        """
         with log_section("📋 Monitoring clipboard for new map exchange strings..."):
             while not self._stop_flag.is_set():
                 try:
@@ -50,4 +66,4 @@ class ClipboardMapStringProvider(MapStringProvider):
                         self._on_new_map_string(clipboard_text)
                 except Exception as e:
                     log.warning(f"⚠️ Failed to read clipboard: {e}")
-                time.sleep(self._poll_interval)
+                self._stop_flag.wait(timeout=self._poll_interval)

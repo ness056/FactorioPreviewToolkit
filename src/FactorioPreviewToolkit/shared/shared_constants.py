@@ -1,18 +1,23 @@
 import textwrap
 from pathlib import Path
 
-from src.FactorioPreviewToolkit.shared.structured_logger import log_section, log
 from src.FactorioPreviewToolkit.shared.utils import get_project_root
 
 
 class Constants:
+    """
+    Central definition of constants like directory and file paths used by the toolkit.
+    Some directories are created on import to ensure availability.
+    """
+
     # Common base directories
     BASE_PROJECT_DIR = get_project_root()
     BASE_TEMP_DIR = BASE_PROJECT_DIR / "temp_files"
     BASE_TEMP_DIR.mkdir(parents=True, exist_ok=True)  # Create directories if they don't exist
 
     LOG_DIR = BASE_PROJECT_DIR / "logs"
-    LOG_PATH = LOG_DIR / "uploader.log"
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    LOG_PATH = LOG_DIR / "current.log"
     PREVIOUS_LOG_PATH = LOG_DIR / "previous.log"
     PREVIEW_TOOLKIT_CONFIG_PATH = BASE_PROJECT_DIR / "config.ini"
     BASE_ASSETS_DIR = BASE_PROJECT_DIR / "assets"
@@ -34,6 +39,8 @@ class Constants:
         """
         Lazily initializes the Factorio config file path. If the file doesn't exist, it creates it with default content.
         """
+        from src.FactorioPreviewToolkit.shared.structured_logger import log_section, log
+
         config_path = self.BASE_TEMP_DIR / self.FACTORIO_CONFIG_FILENAME
         if not config_path.exists():
             with log_section(f"❌ Factorio config not found at {config_path}. Creating it..."):

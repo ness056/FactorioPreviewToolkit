@@ -7,6 +7,9 @@ from src.FactorioPreviewToolkit.uploader.base_uploader import BaseUploader
 
 
 def _get_rclone_executable() -> Path:
+    """
+    Returns the resolved rclone executable path from config, or fails if not set.
+    """
     rclone_executable = Config.get().rclone_executable
     assert (
         rclone_executable is not None
@@ -15,6 +18,9 @@ def _get_rclone_executable() -> Path:
 
 
 def _is_rclone_configured(remote_name: str) -> bool:
+    """
+    Checks whether the given rclone remote is already configured.
+    """
     rclone_executable = _get_rclone_executable()
     result = subprocess.run([rclone_executable, "listremotes"], capture_output=True, text=True)
     remotes = result.stdout.strip().splitlines()
@@ -22,6 +28,9 @@ def _is_rclone_configured(remote_name: str) -> bool:
 
 
 def _open_rclone_config() -> None:
+    """
+    Launches the interactive rclone config tool.
+    """
     rclone_executable = _get_rclone_executable()
     log.info("🔧 Opening rclone config interface...")
 
@@ -35,8 +44,15 @@ def _open_rclone_config() -> None:
 
 
 class RcloneUploader(BaseUploader):
+    """
+    Rclone-based uploader implementation that copies images to a remote and returns shareable links.
+    """
 
     def upload_single(self, local_path: Path, remote_filename: str) -> str:
+        """
+        Uploads a single file using rclone and returns a shareable link.
+        Prompts the user to configure the remote if it's missing.
+        """
         config = Config.get()
         rclone_executable = _get_rclone_executable()
         remote_name = config.rclone_remote_service

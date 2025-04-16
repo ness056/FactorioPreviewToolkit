@@ -10,6 +10,11 @@ from src.FactorioPreviewToolkit.shared.utils import resolve_relative_to_project_
 
 
 class Settings(BaseModel):
+    """
+    Validates and normalizes all config values loaded from config.ini.
+    Resolves project-relative paths and applies computed fields.
+    """
+
     # === Factorio Location ===
     factorio_locator_method: Literal["fixed_path", "active_window"]
     fixed_path_factorio_executable: Path | None = None  # Path to Factorio executable
@@ -45,6 +50,9 @@ class Settings(BaseModel):
 
     @model_validator(mode="before")
     def resolve_paths_relative_to_project_root(cls, values: dict[str, Any]) -> dict[str, Any]:
+        """
+        Resolves all path fields relative to project root and sets computed paths.
+        """
 
         def resolve(name: str) -> None:
             if values.get(name) is not None:
@@ -79,6 +87,9 @@ class Settings(BaseModel):
 
     @field_validator("map_preview_size")
     def must_be_positive(cls, v: int) -> int:
+        """
+        Ensures preview size is a positive integer.
+        """
         if v <= 0:
             raise ValueError("map_preview_size must be a positive integer")
         return v
@@ -89,11 +100,11 @@ class Settings(BaseModel):
         "sound_volume_failure_file",
     )
     def volumes_between_0_and_1(cls, v: float, info: FieldValidationInfo) -> float:
+        """
+        Ensures volume is between 0.0 and 1.0.
+        """
         if not (0.0 <= v <= 1.0):
-            # Access alias directly from info.data
-            alias = info.data.get(
-                "alias", "unknown field"
-            )  # Default to 'unknown field' if alias not found
+            alias = info.data.get("alias", "unknown field")
             raise ValueError(f"{alias} must be between 0.0 and 1.0")
         return v
 
@@ -105,11 +116,11 @@ class Settings(BaseModel):
         "rclone_folder",
     )
     def path_must_exist(cls, v: Path, info: FieldValidationInfo) -> Path:
+        """
+        Ensures the given path exists on disk.
+        """
         if not v.exists():
-            # Accessing the alias via the field's metadata (through info.data)
-            alias = info.data.get(
-                "alias", "unknown field"
-            )  # Default to 'unknown field' if alias is not found
+            alias = info.data.get("alias", "unknown field")
             raise ValueError(f"{alias} does not exist: {v}")
         return v.resolve()
 
@@ -117,6 +128,9 @@ class Settings(BaseModel):
     def check_rclone_executable_exists(
         cls, v: Path | None, info: FieldValidationInfo
     ) -> Path | None:
+        """
+        Ensures rclone is present if rclone upload method is selected.
+        """
         if info.data.get("upload_method") == "rclone":
             if not v or not v.exists():
                 raise ValueError(f"rclone executable not found at {v}")
@@ -126,12 +140,18 @@ class Settings(BaseModel):
     def check_factorio_executable_exists(
         cls, v: Path | None, info: FieldValidationInfo
     ) -> Path | None:
+        """
+        Checks that the fixed Factorio path is valid if used.
+        """
         if info.data.get("factorio_locator_method") == "fixed_path" and v and not v.exists():
             raise ValueError(f"Factorio executable not found at {v}")
         return v
 
     @field_validator("active_window_poll_interval_in_seconds")
     def check_poll_interval_if_active_window(cls, v: int, info: FieldValidationInfo) -> int:
+        """
+        Ensures polling interval is > 0 when using active window locator.
+        """
         if info.data.get("factorio_locator_method") == "active_window" and v <= 0:
             raise ValueError(
                 "active_window_poll_interval_in_seconds must be > 0 for active_window mode"
@@ -140,18 +160,27 @@ class Settings(BaseModel):
 
     @field_validator("planet_names")
     def planets_cannot_be_empty(cls, v: list[str]) -> list[str]:
+        """
+        Validates that planet list is not empty.
+        """
         if not v:
             raise ValueError("planet_names cannot be empty")
         return v
 
     @field_validator("upload_method")
     def check_upload_method(cls, v: str) -> str:
+        """
+        Validates upload method value.
+        """
         if v not in ("rclone", "none"):
             raise ValueError("upload_method must be 'rclone' or 'none'")
         return v
 
     @field_validator("map_exchange_input_method")
     def validate_map_method(cls, v: str) -> str:
+        """
+        Validates the map exchange string input method.
+        """
         valid = {"clipboard_auto", "clipboard_hotkey", "file_hotkey", "dialog_hotkey"}
         if v not in valid:
             raise ValueError(f"Invalid map_exchange_input_method: {v}")
@@ -159,6 +188,9 @@ class Settings(BaseModel):
 
     @field_validator("factorio_locator_method")
     def validate_locator_method(cls, v: str) -> str:
+        """
+        Validates the Factorio path locator method.
+        """
         if v not in {"fixed_path", "active_window"}:
             raise ValueError("factorio_locator_method must be 'fixed_path' or 'active_window'")
         return v

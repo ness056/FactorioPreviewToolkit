@@ -6,7 +6,9 @@ from src.FactorioPreviewToolkit.shared.structured_logger import log, log_section
 
 
 def _write_links_file(planet_links: dict[str, str]) -> None:
-
+    """
+    Writes a summary file with links to each uploaded image, one per planet.
+    """
     with log_section("📝 Saving download links to file..."):
         config = Config.get()
         try:
@@ -20,7 +22,15 @@ def _write_links_file(planet_links: dict[str, str]) -> None:
 
 
 class BaseUploader(ABC):
+    """
+    Abstract uploader class. Handles upload of all planet preview images.
+    Subclasses must implement upload_single().
+    """
+
     def upload_all(self) -> None:
+        """
+        Uploads all planet preview images and saves the resulting download links to a file.
+        """
         config = Config.get()
         with log_section("🚀 Starting image upload..."):
             planet_links: dict[str, str] = {}
@@ -40,4 +50,8 @@ class BaseUploader(ABC):
             log.info("✅ All uploads complete.")
 
     @abstractmethod
-    def upload_single(self, local_path: Path, remote_filename: str) -> str: ...
+    def upload_single(self, local_path: Path, remote_filename: str) -> str:
+        """
+        Uploads a single image file and returns a public URL.
+        """
+        ...

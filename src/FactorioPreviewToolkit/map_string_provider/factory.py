@@ -11,12 +11,14 @@ from src.FactorioPreviewToolkit.shared.config import Config
 def get_map_string_provider(
     on_new_map_string: collections.abc.Callable[[str], None],
 ) -> MapStringProvider:
+    """
+    Selects and returns a map string provider based on config.
+    """
     config = Config.get()
     map_exchange_input_method = config.map_exchange_input_method
     if map_exchange_input_method == "clipboard_auto":
-        # Detect and handle clipboard-based input automatically
         return ClipboardMapStringProvider(on_new_map_string)
-    # elif map_exchange_input_method == "file_watch":
+    # elif map_exchange_input_method == "file_watch":  # TODO: AntiElitz: Implement a file watcher
     #     # Watch a file for changes and read map string
     #     return FileWatchMapStringProvider(on_new_map_string)
     else:

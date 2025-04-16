@@ -5,19 +5,12 @@
 # Temporary files and folders
 temp_files/
 
-# Dummy save folder for map-gen-settings generation
-factorio-preview-toolkit-dummy-save-to-create-map-gen-settings/
-
-# Map preview images (output)
+# Map preview images and links (output)
 previews/
-
-# Map generation config (regenerated)
-map-gen-settings.json
-
-# Logs and runtime output
-uploader.log
-previous.log
 output_links.txt
+
+# Logs
+logs/
 
 # Viewer config and build artifacts
 viewer/viewer-config.js
@@ -28,9 +21,9 @@ build/
 *.min.js
 *.min.css
 
-# rclone sync folder (ignore all except .gitkeep)
-rclone/*
-!rclone/.gitkeep
+# Ignore all of third_party, but keep .gitkeep files
+third_party/*
+!third_party/**/.gitkeep
 
 # ==============================================================================
 # 🐍 Python-Related Ignores

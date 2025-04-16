@@ -4,6 +4,9 @@ from pathlib import Path
 
 
 def is_valid_map_string(s: str) -> bool:
+    """
+    Checks if the string matches the map exchange format: >>>eN...<<<
+    """
     return bool(re.match(r"^>>>eN[a-zA-Z0-9+/=]+<<<$", s.strip()))
 
 

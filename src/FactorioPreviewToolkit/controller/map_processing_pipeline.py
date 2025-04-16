@@ -15,10 +15,10 @@ from src.FactorioPreviewToolkit.shared.structured_logger import log
 
 class MapProcessingPipeline:
     """
-    This class represents a pipeline for processing a Factorio map. It executes two subprocesses
-    sequentially: a preview generation and an upload step. The pipeline runs asynchronously,
-    with only one worker executing at a time. If a new job is triggered while the current pipeline
-    is running, the previous job is interrupted as the result is no longer needed.
+    Runs the map generation and upload subprocesses for a given map string.
+
+    Ensures only one job is active at a time. If a new job is triggered while another is running,
+    the current one is canceled before starting the new one.
     """
 
     def __init__(self) -> None:
@@ -29,6 +29,9 @@ class MapProcessingPipeline:
         self._worker_ID = 0
 
     def run_async(self, factorio_path: Path, map_string: str) -> None:
+        """
+        Starts the pipeline in a background thread after stopping any existing job.
+        """
         self._stop()
         with self._lock:
             self.generator_executor = SingleProcessExecutor(
@@ -41,27 +44,28 @@ class MapProcessingPipeline:
                 ],
             )
             self.uploader_executor = SingleProcessExecutor(
-                "Uploader", ["-m", "src.FactorioPreviewToolkit.uploader", str(factorio_path)]
+                "Uploader",
+                ["-m", "src.FactorioPreviewToolkit.uploader", str(factorio_path)],
             )
 
             thread_name = f"Worker-{self._worker_ID}"
             self._worker_ID += 1
             self._worker_thread = Thread(
                 target=self._execute_pipeline,
-                args=(),
                 name=thread_name,
                 daemon=True,
             )
             self._worker_thread.start()
 
     def _execute_pipeline(self) -> None:
+        """
+        Executes the preview generator and uploader sequentially.
+        Aborts on failure or if stopped mid-execution.
+        """
         with self._lock:
-
             play_start_sound()
 
-            assert (
-                self.generator_executor is not None
-            ), "Generator executor not set, but should have been set by caller"
+            assert self.generator_executor is not None
             generator_status = self.generator_executor.run_subprocess()
             if generator_status == SubprocessStatus.KILLED:
                 return
@@ -69,9 +73,7 @@ class MapProcessingPipeline:
                 play_failure_sound()
                 return
 
-            assert (
-                self.uploader_executor is not None
-            ), "Uploader executor not set, but should have been set by caller"
+            assert self.uploader_executor is not None
             upload_status = self.uploader_executor.run_subprocess()
             if upload_status == SubprocessStatus.KILLED:
                 return
@@ -82,7 +84,9 @@ class MapProcessingPipeline:
             play_success_sound()
 
     def _stop(self) -> None:
-
+        """
+        Stops any currently running subprocesses and waits for the worker thread to finish.
+        """
         if self.generator_executor and self.generator_executor.get_status() in [
             SubprocessStatus.RUNNING,
             SubprocessStatus.NOT_RUN,

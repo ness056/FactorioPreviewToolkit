@@ -1,3 +1,10 @@
+"""
+Handles extracting map-gen-settings from a map exchange string by using a dummy save.
+
+This module injects Lua code into a control.lua of a dummy save file that decodes the exchange string at tick 0,
+runs Factorio in benchmark mode to trigger it, and then splits the result into a usable map-gen-settings JSON.
+"""
+
 import json
 import re
 import textwrap
@@ -10,6 +17,9 @@ from src.FactorioPreviewToolkit.shared.structured_logger import log, log_section
 
 
 def _build_control_lua(exchange_string: str, output_filename: str) -> str:
+    """
+    Generates Lua code that extracts combined-map-gen-settings from an exchange string.
+    """
     return textwrap.dedent(
         f"""
         script.on_event(defines.events.on_tick, function(event)
@@ -24,6 +34,10 @@ def _build_control_lua(exchange_string: str, output_filename: str) -> str:
 
 
 def _create_dummy_save(factorio_path: Path) -> None:
+    """
+    Creates a dummy save used to execute lua code to generate the combined-map-gen-settings
+    Skips creation if it already exists.
+    """
     with log_section("🛠️ Creating dummy save..."):
         save_folder = constants.DUMMY_SAVE_TO_CREATE_MAP_GEN_SETTINGS_PATH
 
@@ -43,6 +57,10 @@ def _create_dummy_save(factorio_path: Path) -> None:
 
 
 def _update_control_lua(exchange_string: str) -> None:
+    """
+    Injects the control.lua code that parses the exchange string on tick 0.
+    Replaces any previous injected block.
+    """
     with log_section("🛠️ Updating control.lua with exchange string..."):
         control_lua = constants.CONTROL_LUA_PATH
         if not control_lua.exists():
@@ -70,6 +88,9 @@ def _update_control_lua(exchange_string: str) -> None:
 
 
 def _extract_map_gen_settings_from_combined_json() -> None:
+    """
+    Extracts map-gen-settings from the combined-map-gen-settings JSON written by Factorio and writes it to file.
+    """
     with log_section("📤 Extracting map-gen-settings from combined JSON..."):
         combined_path = constants.COMBINED_MAP_GEN_SETTINGS_PATH
         if not combined_path.exists():
@@ -90,6 +111,9 @@ def _extract_map_gen_settings_from_combined_json() -> None:
 
 
 def _export_map_gen_settings_via_benchmark(factorio_path: Path) -> None:
+    """
+    Runs dummy save in Factorio to trigger control.lua execution and produce output.
+    """
     save_folder = constants.DUMMY_SAVE_TO_CREATE_MAP_GEN_SETTINGS_PATH
     with log_section("🧪 Running Factorio to export map-gen-settings..."):
         run_factorio_command(
@@ -105,6 +129,9 @@ def _export_map_gen_settings_via_benchmark(factorio_path: Path) -> None:
 
 
 def convert_exchange_string_to_settings(factorio_path: Path, map_string: str) -> None:
+    """
+    Converts a map exchange string into a full map-gen-settings JSON file.
+    """
     with log_section("🧩 Converting map exchange string to map-gen-settings..."):
         _create_dummy_save(factorio_path)
         _update_control_lua(map_string)

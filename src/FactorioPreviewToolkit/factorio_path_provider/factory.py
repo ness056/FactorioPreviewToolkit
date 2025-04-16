@@ -14,6 +14,10 @@ from src.FactorioPreviewToolkit.shared.structured_logger import log
 def get_factorio_path_provider(
     on_new_factorio_path: collections.abc.Callable[[Path], None],
 ) -> FactorioPathProvider:
+    """
+    Factory function that returns a FactorioPathProvider implementation
+    based on the configured locator method and operating system.
+    """
     config = Config.get()
     method = config.factorio_locator_method
 
@@ -27,9 +31,9 @@ def get_factorio_path_provider(
         system = platform.system()
         if system == "Windows":
             return WindowsActiveWindowProvider(on_new_factorio_path)
-        # elif system == "Darwin":  # macOS
+        # elif system == "Darwin":  # macOS  # TODO: AntiElitz: Implement active window provider for Mac
         #     return MacActiveWindowProvider(on_new_factorio_path)
-        # elif system == "Linux":
+        # elif system == "Linux":  # TODO: AntiElitz: Implement active window provider for Linux
         #     return LinuxActiveWindowProvider(on_new_factorio_path)
         else:
             raise ValueError(f"❌ Unsupported platform: {system}")

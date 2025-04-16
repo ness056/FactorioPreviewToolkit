@@ -4,6 +4,10 @@ from src.FactorioPreviewToolkit.uploader.rclone_uploader import RcloneUploader
 
 
 def get_uploader() -> BaseUploader:
+    """
+    Returns the configured uploader instance based on the upload_method in config.
+    Raises an error if the method is unsupported or disabled.
+    """
     match Config.get().upload_method:
         case "rclone":
             return RcloneUploader()
