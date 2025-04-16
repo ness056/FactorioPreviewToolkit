@@ -8,6 +8,7 @@ from src.FactorioPreviewToolkit.factorio_path_provider.factory import get_factor
 from src.FactorioPreviewToolkit.map_string_provider.base import MapStringProvider
 from src.FactorioPreviewToolkit.map_string_provider.factory import get_map_string_provider
 from src.FactorioPreviewToolkit.shared.structured_logger import log
+from src.FactorioPreviewToolkit.shared.structured_logger import log_section
 
 
 class PreviewController:
@@ -39,27 +40,30 @@ class PreviewController:
         Processes events from the event queue. This method listens for new map strings and Factorio paths,
         and triggers the map processing pipeline when both are available.
         """
-        while self._running:
-            try:
-                event_type, data = self._event_queue.get(timeout=0.5)
-            except queue.Empty:
-                continue
+        with log_section("🔍 Processing events..."):
+            while self._running:
+                try:
+                    event_type, data = self._event_queue.get(timeout=0.5)
+                except queue.Empty:
+                    continue
 
-            if event_type == "map_string":
-                assert isinstance(data, str)
-                self._latest_map_string = data
-                self._map_string_analysed = False
+                if event_type == "map_string":
+                    assert isinstance(data, str)
+                    self._latest_map_string = data
+                    self._map_string_analysed = False
+                    log.info(f"✅ Updated map exchange string: {self._latest_map_string}")
 
-            elif event_type == "factorio_path":
-                assert isinstance(data, Path)
-                self._latest_factorio_path = data
+                elif event_type == "factorio_path":
+                    assert isinstance(data, Path)
+                    self._latest_factorio_path = data
+                    log.info(f"✅ Updated Factorio path: {self._latest_factorio_path}")
 
-            if (
-                self._latest_map_string
-                and self._latest_factorio_path
-                and not self._map_string_analysed
-            ):
-                self._start_map_processing()
+                if (
+                    self._latest_map_string
+                    and self._latest_factorio_path
+                    and not self._map_string_analysed
+                ):
+                    self._start_map_processing()
 
     def _start_map_processing(self) -> None:
         """
@@ -89,11 +93,9 @@ class PreviewController:
         """
 
         def on_new_map_string(map_string: str) -> None:
-            log.info(f"📥 Received new map string: {map_string}")
             self._event_queue.put(("map_string", map_string))
 
         def on_new_factorio_path(factorio_path: Path) -> None:
-            log.info(f"📍 Detected new Factorio path: {factorio_path}")
             self._event_queue.put(("factorio_path", factorio_path))
 
         self._map_string_provider = get_map_string_provider(on_new_map_string)

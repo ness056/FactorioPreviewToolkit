@@ -100,8 +100,8 @@ class MapProcessingPipeline:
             self.uploader_executor.stop()
 
         if self._worker_thread and self._worker_thread.is_alive():
-            log.info("⚠️ Pipeline is already running. Aborting...")
             self._worker_thread.join(timeout=1)
+            log.info("⚠️ Pipeline Aborted.")
             if self._worker_thread.is_alive():
                 log.error("❌ Worker thread did not terminate in time. Raising exception.")
                 raise TimeoutError("Worker thread did not terminate within the expected time.")

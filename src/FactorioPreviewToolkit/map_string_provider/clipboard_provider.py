@@ -45,10 +45,10 @@ class ClipboardMapStringProvider(MapStringProvider):
         """
         Stops the monitoring thread and waits for it to finish.
         """
-        log.info("🛑 Stopping Clipboard Monitor...")
-        self._stop_flag.set()
-        self._thread.join()
-        log.info("✅ Clipboard Monitor stopped.")
+        with log_section("🛑 Stopping Clipboard Monitor..."):
+            self._stop_flag.set()
+            self._thread.join()
+            log.info("✅ Clipboard Monitor stopped.")
 
     def _run(self) -> None:
         """

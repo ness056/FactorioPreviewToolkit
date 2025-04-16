@@ -5,7 +5,7 @@ from pathlib import Path
 
 from src.FactorioPreviewToolkit.factorio_path_provider.base import FactorioPathProvider
 from src.FactorioPreviewToolkit.shared.config import Config
-from src.FactorioPreviewToolkit.shared.structured_logger import log
+from src.FactorioPreviewToolkit.shared.structured_logger import log, log_section
 
 
 class ActiveWindowProvider(FactorioPathProvider):
@@ -34,20 +34,21 @@ class ActiveWindowProvider(FactorioPathProvider):
 
     def stop(self) -> None:
         """Stops the background thread monitoring the active window."""
-        log.info("🛑 Stopping Active Window Provider monitoring...")
-        self._stop_flag.set()
-        self._thread.join()
-        log.info("✅ Active Window Provider monitoring stopped.")
+        with log_section("🛑 Stopping Active Window Provider monitoring..."):
+            self._stop_flag.set()
+            self._thread.join()
+            log.info("✅ Active Window Provider monitoring stopped.")
 
     def _run(self) -> None:
         """Periodically checks for a new active Factorio window and emits updates."""
-        while not self._stop_flag.is_set():
-            factorio_path = self.get_factorio_executable_path()
-            if factorio_path and self._current_path != factorio_path:
-                log.info(f"🪟 Detected new Factorio path: {factorio_path}")
-                self._current_path = factorio_path
-                self._on_new_factorio_path(factorio_path)
-            self._stop_flag.wait(self._poll_interval)
+        with log_section("🪟 Monitoring active windows for Factorio instances..."):
+            while not self._stop_flag.is_set():
+                factorio_path = self.get_factorio_executable_path()
+                if factorio_path and self._current_path != factorio_path:
+                    log.info(f"🎯 Detected new Factorio window.")
+                    self._current_path = factorio_path
+                    self._on_new_factorio_path(factorio_path)
+                self._stop_flag.wait(self._poll_interval)
 
     @abstractmethod
     def get_factorio_executable_path(self) -> Path | None:

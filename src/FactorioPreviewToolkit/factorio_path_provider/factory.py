@@ -9,6 +9,7 @@ from src.FactorioPreviewToolkit.factorio_path_provider.windows_active_window_pro
 )
 from src.FactorioPreviewToolkit.shared.config import Config
 from src.FactorioPreviewToolkit.shared.structured_logger import log
+from src.FactorioPreviewToolkit.shared.structured_logger import log_section
 
 
 def get_factorio_path_provider(
@@ -20,23 +21,23 @@ def get_factorio_path_provider(
     """
     config = Config.get()
     method = config.factorio_locator_method
+    with log_section("🏗️ Selecting Factorio path provider..."):
+        if method == "fixed_path":
+            log.info("✅ Using FixedPathProvider.")
+            return FixedPathProvider(on_new_factorio_path)
 
-    if method == "fixed_path":
-        log.info("🏗️ Using FixedPathProvider")
-        return FixedPathProvider(on_new_factorio_path)
+        elif method == "active_window":
+            log.info("✅ Using ActiveWindowProvider.")
 
-    elif method == "active_window":
-        log.info("🏗️ Using ActiveWindowProvider")
+            system = platform.system()
+            if system == "Windows":
+                return WindowsActiveWindowProvider(on_new_factorio_path)
+            # elif system == "Darwin":  # macOS  # TODO: AntiElitz: Implement active window provider for Mac
+            #     return MacActiveWindowProvider(on_new_factorio_path)
+            # elif system == "Linux":  # TODO: AntiElitz: Implement active window provider for Linux
+            #     return LinuxActiveWindowProvider(on_new_factorio_path)
+            else:
+                raise ValueError(f"❌ Unsupported platform: {system}")
 
-        system = platform.system()
-        if system == "Windows":
-            return WindowsActiveWindowProvider(on_new_factorio_path)
-        # elif system == "Darwin":  # macOS  # TODO: AntiElitz: Implement active window provider for Mac
-        #     return MacActiveWindowProvider(on_new_factorio_path)
-        # elif system == "Linux":  # TODO: AntiElitz: Implement active window provider for Linux
-        #     return LinuxActiveWindowProvider(on_new_factorio_path)
         else:
-            raise ValueError(f"❌ Unsupported platform: {system}")
-
-    else:
-        raise ValueError(f"❌ Unknown factorio_locator_method: {method}")
+            raise ValueError(f"❌ Unknown factorio_locator_method: {method}")

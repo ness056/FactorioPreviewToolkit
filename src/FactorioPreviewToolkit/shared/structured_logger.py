@@ -5,18 +5,25 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from io import TextIOWrapper
 
+
+class NestingState(threading.local):
+    """
+    Thread-local state holder for managing logging indentation levels independently per thread.
+    """
+
+    level: int = 0
+
+
 # Thread-local storage for nesting level (per thread)
-_nesting = threading.local()
+_nesting = NestingState()
 
 
 def get_logging_indent() -> str:
     """
     Returns the current indentation string based on nesting level.
+    Ensures that each thread has its own independent level initialized.
     """
-    level = getattr(_nesting, "level", 0)
-    if level == 0:
-        return ""
-    return "   " * level  # Indentation string
+    return "   " * _nesting.level
 
 
 @contextmanager
@@ -25,9 +32,6 @@ def log_section(title: str) -> Iterator[None]:
     Context manager for logging a section with increased indentation.
     Restores indentation level after the block ends.
     """
-    if not hasattr(_nesting, "level"):
-        _nesting.level = 0
-
     log.info(title)
     _nesting.level += 1
     try:
@@ -40,8 +44,6 @@ def set_logging_indent(level: int) -> None:
     """
     Sets the current thread's indentation level manually.
     """
-    if not hasattr(_nesting, "level"):
-        _nesting.level = 0
     _nesting.level = max(0, level)
 
 
@@ -70,7 +72,6 @@ def setup_logger() -> logging.Logger:
     """
     Sets up the structured logger with custom formatting and UTF-8 stdout handling.
     """
-    # Ensure UTF-8 encoding for stdout/stderr
     if sys.stdout.encoding is None or sys.stdout.encoding.lower() != "utf-8":
         sys.stdout = TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     if sys.stderr.encoding is None or sys.stderr.encoding.lower() != "utf-8":

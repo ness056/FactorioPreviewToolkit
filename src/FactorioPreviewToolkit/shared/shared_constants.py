@@ -17,8 +17,6 @@ class Constants:
 
     LOG_DIR = BASE_PROJECT_DIR / "logs"
     LOG_DIR.mkdir(parents=True, exist_ok=True)
-    LOG_PATH = LOG_DIR / "current.log"
-    PREVIOUS_LOG_PATH = LOG_DIR / "previous.log"
     PREVIEW_TOOLKIT_CONFIG_PATH = BASE_PROJECT_DIR / "config.ini"
     BASE_ASSETS_DIR = BASE_PROJECT_DIR / "assets"
     FACTORIO_WRITE_DATA_PATH = BASE_TEMP_DIR / "data"

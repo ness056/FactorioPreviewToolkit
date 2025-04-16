@@ -5,7 +5,10 @@ preview images for all configured planets using the Factorio CLI, and optionally
 uploads them to a remote service like Dropbox.
 """
 
-# enable_tee_logging()
+from src.FactorioPreviewToolkit.shared.shared_constants import constants
+from src.FactorioPreviewToolkit.shared.tee_logger import enable_tee_logging
+
+enable_tee_logging(constants.LOG_DIR, keep_last_n=20)
 
 from src.FactorioPreviewToolkit.controller.controller import PreviewController
 from src.FactorioPreviewToolkit.shared.structured_logger import log

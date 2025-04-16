@@ -6,10 +6,10 @@ def main() -> None:
     """
     Entry point for running the uploader standalone. Selects the uploader and starts the upload.
     """
-    log_section("🚀 Uploader started.")
-    uploader = get_uploader()
-    uploader.upload_all()
-    log.info("✅ Uploader finished successfully.")
+    with log_section("🚀 Uploader started."):
+        uploader = get_uploader()
+        uploader.upload_all()
+        log.info("✅ Uploader finished successfully.")
 
 
 if __name__ == "__main__":
