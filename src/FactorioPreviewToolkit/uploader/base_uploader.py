@@ -37,7 +37,7 @@ class BaseUploader(ABC):
 
             for planet in config.planet_names:
                 with log_section(f"🌍 Uploading {planet.capitalize()}..."):
-                    image_path = config.previews_output_folder / f"{planet}.png"
+                    image_path = config.previews_output_dir / f"{planet}.png"
                     try:
                         link = self.upload_single(image_path, f"{planet}.png")
                         planet_links[planet] = link

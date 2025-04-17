@@ -41,9 +41,18 @@ class SingleProcessExecutor:
         Launches the subprocess and streams its output to the console.
         Sets the execution status based on completion or failure.
         """
+        if not self._prepare_subprocess():
+            return self._status
+        self._stream_output()
+        return self._finalize_status()
+
+    def _prepare_subprocess(self) -> bool:
+        """
+        Starts the subprocess and updates its status if not already running.
+        """
         with self._lock:
             if self._status != SubprocessStatus.NOT_RUN:
-                return self._status
+                return False
 
             log.info(f"🚀 Launching {self._process_name} subprocess with args: {self._args}...")
             self._active_process = subprocess.Popen(
@@ -55,7 +64,13 @@ class SingleProcessExecutor:
                 errors="replace",
             )
             self._status = SubprocessStatus.RUNNING
+            return True
 
+    def _stream_output(self) -> None:
+        """
+        Streams the subprocess output to the console.
+        """
+        assert self._active_process is not None
         try:
             if self._active_process.stdout:
                 for line in self._active_process.stdout:
@@ -65,6 +80,11 @@ class SingleProcessExecutor:
             log.error(f"❌ Failed to read {self._process_name} output.")
             raise
 
+    def _finalize_status(self) -> SubprocessStatus:
+        """
+        Waits for process to exit and sets final status accordingly.
+        """
+        assert self._active_process is not None
         exit_code = self._active_process.wait()
 
         with self._lock:

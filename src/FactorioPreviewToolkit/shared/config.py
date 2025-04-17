@@ -13,7 +13,7 @@ class Config:
     """
 
     _instance: Settings | None = None
-    _path = Path(constants.PREVIEW_TOOLKIT_CONFIG_PATH)
+    _path = Path(constants.PREVIEW_TOOLKIT_CONFIG_FILEPATH)
 
     @classmethod
     def get(cls) -> Settings:
@@ -42,25 +42,39 @@ class Config:
             parser = ConfigParser(interpolation=ExtendedInterpolation())
             parser.read(config_path)
 
-            def flat(section_name: str) -> dict[str, str]:
-                return {k: v for k, v in parser[section_name].items()}
-
-            data: dict[str, Union[str, list[str]]] = {}
-            data.update(flat("settings"))
-            data.update(flat("map_exchange_input"))
-            data.update(flat("upload"))
-
-            # Convert stringified list into Python list
-            data["planet_names"] = [
-                x.strip(" '\"")
-                for x in str(data["planet_names"]).strip("[]").split(",")
-                if x.strip()
-            ]
+            data = cls._flatten_sections(parser)
+            data = cls._normalize_data(data)
 
             try:
-                # cls._instance = Settings(**data)
                 cls._instance = Settings.model_validate(data)
                 log.info("✅ Config loaded and validated successfully.")
-            except Exception as e:
-                log.error(f"❌ Failed to load config: {e}")
+            except Exception:
+                log.error("❌ Failed to load config")
                 raise
+
+    @staticmethod
+    def _flatten_sections(parser: ConfigParser) -> dict[str, Union[str, list[str]]]:
+        """
+        Flattens config sections into a single dictionary.
+        """
+
+        def flat(section_name: str) -> dict[str, str]:
+            return {k: v for k, v in parser[section_name].items()}
+
+        data: dict[str, Union[str, list[str]]] = {}
+        data.update(flat("settings"))
+        data.update(flat("map_exchange_input"))
+        data.update(flat("upload"))
+        return data
+
+    @staticmethod
+    def _normalize_data(data: dict[str, Union[str, list[str]]]) -> dict[str, Union[str, list[str]]]:
+        """
+        Applies normalization to specific fields (e.g., string → list conversion).
+        """
+        raw = data.get("planet_names", "")
+        if isinstance(raw, str):
+            data["planet_names"] = [
+                x.strip(" '\"") for x in raw.strip("[]").split(",") if x.strip()
+            ]
+        return data

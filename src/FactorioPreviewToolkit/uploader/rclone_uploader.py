@@ -6,22 +6,11 @@ from src.FactorioPreviewToolkit.shared.structured_logger import log, log_section
 from src.FactorioPreviewToolkit.uploader.base_uploader import BaseUploader
 
 
-def _get_rclone_executable() -> Path:
-    """
-    Returns the resolved rclone executable path from config, or fails if not set.
-    """
-    rclone_executable = Config.get().rclone_executable
-    assert (
-        rclone_executable is not None
-    ), "rclone_executable must not be None when using RcloneUploader"
-    return rclone_executable
-
-
 def _is_rclone_configured(remote_name: str) -> bool:
     """
     Checks whether the given rclone remote is already configured.
     """
-    rclone_executable = _get_rclone_executable()
+    rclone_executable = Config.get().rclone_executable
     result = subprocess.run([rclone_executable, "listremotes"], capture_output=True, text=True)
     remotes = result.stdout.strip().splitlines()
     return any(remote_name + ":" == remote for remote in remotes)
@@ -31,7 +20,7 @@ def _open_rclone_config() -> None:
     """
     Launches the interactive rclone config tool.
     """
-    rclone_executable = _get_rclone_executable()
+    rclone_executable = Config.get().rclone_executable
     log.info("🔧 Opening rclone config interface...")
 
     try:
@@ -54,9 +43,9 @@ class RcloneUploader(BaseUploader):
         Prompts the user to configure the remote if it's missing.
         """
         config = Config.get()
-        rclone_executable = _get_rclone_executable()
+        rclone_executable = Config.get().rclone_executable
         remote_name = config.rclone_remote_service
-        remote_folder = config.upload_remote_folder
+        remote_folder = config.remote_upload_dir
         remote_target = f"{remote_name}:{remote_folder}"
         full_remote_path = f"{remote_target}/{remote_filename}"
 

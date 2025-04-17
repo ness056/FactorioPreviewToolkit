@@ -1,5 +1,3 @@
-# src/controller/sound_handler.py
-
 import contextlib
 import os
 from pathlib import Path
@@ -40,7 +38,7 @@ def play_start_sound() -> None:
     Plays the configured 'start' sound.
     """
     config = Config.get()
-    _play_sound(config.sound_start_file, config.sound_volume_start_file)
+    _play_sound(config.sound_start_filepath, config.start_sound_volume)
 
 
 def play_success_sound() -> None:
@@ -48,7 +46,7 @@ def play_success_sound() -> None:
     Plays the configured 'success' sound.
     """
     config = Config.get()
-    _play_sound(config.sound_success_file, config.sound_volume_success_file)
+    _play_sound(config.sound_success_filepath, config.success_sound_volume)
 
 
 def play_failure_sound() -> None:
@@ -56,4 +54,4 @@ def play_failure_sound() -> None:
     Plays the configured 'failure' sound.
     """
     config = Config.get()
-    _play_sound(config.sound_failure_file, config.sound_volume_failure_file)
+    _play_sound(config.sound_failure_filepath, config.failure_sound_volume)

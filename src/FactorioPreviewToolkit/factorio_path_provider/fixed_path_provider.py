@@ -23,9 +23,6 @@ class FixedPathProvider(FactorioPathProvider):
         """
         config = Config.get()
         fixed_path = config.fixed_path_factorio_executable
-        assert (
-            fixed_path is not None
-        ), "Internal error: fixed_path_factorio_executable should have been validated by config schema"
         log.info(f"📌 Using fixed Factorio path: {fixed_path}")
         self._on_new_factorio_path(fixed_path)
 

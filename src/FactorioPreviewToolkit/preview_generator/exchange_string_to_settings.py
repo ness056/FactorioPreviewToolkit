@@ -62,9 +62,7 @@ def _update_control_lua(exchange_string: str) -> None:
     Replaces any previous injected block.
     """
     with log_section("🛠️ Updating control.lua with exchange string..."):
-        control_lua = constants.CONTROL_LUA_PATH
-        if not control_lua.exists():
-            raise FileNotFoundError(f"❌ control.lua not found: {control_lua}")
+        control_lua = constants.CONTROL_LUA_FILEPATH
 
         original = control_lua.read_text(encoding="utf-8")
 
@@ -92,9 +90,7 @@ def _extract_map_gen_settings_from_combined_json() -> None:
     Extracts map-gen-settings from the combined-map-gen-settings JSON written by Factorio and writes it to file.
     """
     with log_section("📤 Extracting map-gen-settings from combined JSON..."):
-        combined_path = constants.COMBINED_MAP_GEN_SETTINGS_PATH
-        if not combined_path.exists():
-            raise FileNotFoundError(f"❌ Combined settings file not found: {combined_path}")
+        combined_path = constants.COMBINED_MAP_GEN_SETTINGS_FILEPATH
 
         with combined_path.open("r", encoding="utf-8") as f:
             combined_data = json.load(f)
@@ -103,11 +99,11 @@ def _extract_map_gen_settings_from_combined_json() -> None:
         if not map_gen_settings:
             raise ValueError("❌ 'map_gen_settings' key missing in combined settings JSON.")
 
-        output_path = Path(constants.MAP_GEN_SETTINGS_PATH)
+        output_path = Path(constants.MAP_GEN_SETTINGS_FILEPATH)
         with output_path.open("w", encoding="utf-8") as f:
             json.dump(map_gen_settings, f, indent=2)
 
-        log.info(f"✅ Extracted to {constants.MAP_GEN_SETTINGS_PATH}")
+        log.info(f"✅ Extracted to {constants.MAP_GEN_SETTINGS_FILEPATH}")
 
 
 def _export_map_gen_settings_via_benchmark(factorio_path: Path) -> None:

@@ -32,30 +32,47 @@ class MapProcessingPipeline:
         """
         Starts the pipeline in a background thread after stopping any existing job.
         """
-        self._stop()
+        self._shutdown_existing_worker()
         with self._lock:
-            self.generator_executor = SingleProcessExecutor(
-                "Preview Generator",
-                [
-                    "-m",
-                    "src.FactorioPreviewToolkit.preview_generator",
-                    str(factorio_path),
-                    map_string,
-                ],
-            )
-            self.uploader_executor = SingleProcessExecutor(
-                "Uploader",
-                ["-m", "src.FactorioPreviewToolkit.uploader", str(factorio_path)],
-            )
+            self._prepare_executors(factorio_path, map_string)
+            self._start_worker_thread()
 
-            thread_name = f"Worker-{self._worker_ID}"
-            self._worker_ID += 1
-            self._worker_thread = Thread(
-                target=self._execute_pipeline,
-                name=thread_name,
-                daemon=True,
-            )
-            self._worker_thread.start()
+    def _shutdown_existing_worker(self) -> None:
+        """
+        Stops any existing background job and ensures thread shutdown.
+        """
+        self._stop()
+        if self._worker_thread is not None:
+            self._worker_thread.join(timeout=1)
+            if self._worker_thread.is_alive():
+                log.error("❌ Worker thread did not terminate in time. Raising exception.")
+                raise TimeoutError("Worker thread did not terminate within the expected time.")
+
+    def _prepare_executors(self, factorio_path: Path, map_string: str) -> None:
+        """
+        Sets up the generator and uploader subprocess executors.
+        """
+        self.generator_executor = SingleProcessExecutor(
+            "Preview Generator",
+            ["-m", "src.FactorioPreviewToolkit.preview_generator", str(factorio_path), map_string],
+        )
+        self.uploader_executor = SingleProcessExecutor(
+            "Uploader",
+            ["-m", "src.FactorioPreviewToolkit.uploader", str(factorio_path)],
+        )
+
+    def _start_worker_thread(self) -> None:
+        """
+        Starts the worker thread to execute the pipeline.
+        """
+        thread_name = f"Worker-{self._worker_ID}"
+        self._worker_ID += 1
+        self._worker_thread = Thread(
+            target=self._execute_pipeline,
+            name=thread_name,
+            daemon=True,
+        )
+        self._worker_thread.start()
 
     def _execute_pipeline(self) -> None:
         """
@@ -100,8 +117,4 @@ class MapProcessingPipeline:
             self.uploader_executor.stop()
 
         if self._worker_thread and self._worker_thread.is_alive():
-            self._worker_thread.join(timeout=1)
             log.info("⚠️ Pipeline Aborted.")
-            if self._worker_thread.is_alive():
-                log.error("❌ Worker thread did not terminate in time. Raising exception.")
-                raise TimeoutError("Worker thread did not terminate within the expected time.")

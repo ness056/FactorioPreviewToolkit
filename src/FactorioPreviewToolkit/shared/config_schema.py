@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 from typing import Literal, Any
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, model_validator, field_validator
 from pydantic_core.core_schema import FieldValidationInfo
 
 from src.FactorioPreviewToolkit.shared.shared_constants import constants
@@ -15,73 +15,93 @@ class Settings(BaseModel):
     Resolves project-relative paths and applies computed fields.
     """
 
-    # === Factorio Location ===
-    factorio_locator_method: Literal["fixed_path", "active_window"]
-    fixed_path_factorio_executable: Path | None = None  # Path to Factorio executable
-    active_window_poll_interval_in_seconds: int = 2
-
-    # === Script Output and Previews ===
-    map_preview_size: int
-    previews_output_folder: Path
-    preview_output_file: Path  # Computed from previews_output_folder
-    planet_names: list[str]
-
-    # === Sound Settings ===
-    sound_start_file: Path
-    sound_volume_start_file: float
-    sound_success_file: Path
-    sound_volume_success_file: float
-    sound_failure_file: Path
-    sound_volume_failure_file: float
+    # === Factorio Path Detection ===
+    factorio_locator_method: Literal["fixed_path", "active_window_monitor"]
+    fixed_path_factorio_executable: Path = Path("not-used")
+    factorio_locator_poll_interval_in_seconds: float = 2
 
     # === Map Exchange Input ===
-    map_exchange_input_method: str
-    map_exchange_file_path: Path
+    map_exchange_input_method: Literal["clipboard_monitor", "file_monitor"]
+    file_monitor_filepath: Path = Path("not-used")
+    map_exchange_input_poll_interval_in_seconds: float = 0.5
+
+    # === Preview Generation ===
+    map_preview_size: int
+    planet_names: list[str]
+    previews_output_dir: Path
+    preview_output_file: Path  # Derived
+
+    # === Sound Settings ===
+    sound_start_filepath: Path
+    start_sound_volume: float
+    sound_success_filepath: Path
+    success_sound_volume: float
+    sound_failure_filepath: Path
+    failure_sound_volume: float
 
     # === Upload Settings ===
-    upload_method: Literal["rclone", "none"]
-    rclone_folder: Path
-    rclone_remote_service: str
-    upload_remote_folder: Path
-    rclone_executable: Path | None = None  # Auto-resolved from rclone_folder
+    upload_method: Literal["rclone", "skip"]
+    rclone_remote_service: str = ""
+    remote_upload_dir: Path = Path("not-used")
+    rclone_executable: Path = Path("not-used")  # Derived
 
     class Config:
         frozen = True
 
     @model_validator(mode="before")
-    def resolve_paths_relative_to_project_root(cls, values: dict[str, Any]) -> dict[str, Any]:
+    def normalize_config_values(cls, values: dict[str, Any]) -> dict[str, Any]:
         """
-        Resolves all path fields relative to project root and sets computed paths.
+        Expands .app paths, resolves relative paths, and computes derived fields before validation.
         """
+        cls._expand_mac_app_path(values)
+        cls._resolve_paths_relative_to_root(values)
+        cls._compute_preview_output_path(values)
+        return values
 
-        def resolve(name: str) -> None:
+    @staticmethod
+    def _expand_mac_app_path(values: dict[str, Any]) -> None:
+        """
+        Expands macOS .app bundles to the actual Factorio executable path if needed.
+        Example: /Applications/factorio.app → /Applications/factorio.app/Contents/MacOS/factorio
+        """
+        path = values.get("fixed_path_factorio_executable")
+        if (
+            path
+            and sys.platform == "darwin"
+            and isinstance(path, (str, Path))
+            and str(path).endswith(".app")
+            and "factorio" in str(path).lower()
+        ):
+            values["fixed_path_factorio_executable"] = (
+                Path(path) / "Contents" / "MacOS" / "factorio"
+            )
+
+    @staticmethod
+    def _resolve_paths_relative_to_root(values: dict[str, Any]) -> None:
+        """
+        Resolves relevant paths relative to the project root directory.
+        """
+        for name in [
+            "fixed_path_factorio_executable",
+            "previews_output_dir",
+            "sound_start_filepath",
+            "sound_success_filepath",
+            "sound_failure_filepath",
+            "file_monitor_filepath",
+            "rclone_executable",
+            "remote_upload_dir",
+        ]:
             if values.get(name) is not None:
                 values[name] = resolve_relative_to_project_root(values[name])
 
-        # Resolve all user-defined paths
-        resolve("fixed_path_factorio_executable")
-        resolve("previews_output_folder")
-        resolve("sound_start_file")
-        resolve("sound_success_file")
-        resolve("sound_failure_file")
-        resolve("map_exchange_file_path")
-        resolve("rclone_folder")
-        resolve("upload_remote_folder")
-        resolve("rclone_executable")
-
-        if "previews_output_folder" in values:
-            resolved_preview_folder = resolve_relative_to_project_root(
-                values["previews_output_folder"]
-            )
-            values["preview_output_file"] = resolved_preview_folder / constants.LINK_OUTPUT_FILENAME
-
-        raw_folder = values.get("rclone_folder")
-        if raw_folder is not None:
-            rclone_folder = Path(raw_folder)
-            name = "rclone.exe" if sys.platform.startswith("win") else "rclone"
-            values["rclone_executable"] = rclone_folder / name
-
-        return values
+    @staticmethod
+    def _compute_preview_output_path(values: dict[str, Any]) -> None:
+        """
+        Computes the output file path used to link preview images.
+        """
+        folder = values.get("previews_output_dir")
+        if folder:
+            values["preview_output_file"] = folder / constants.LINK_OUTPUT_FILENAME
 
     # === Validators ===
 
@@ -91,106 +111,129 @@ class Settings(BaseModel):
         Ensures preview size is a positive integer.
         """
         if v <= 0:
-            raise ValueError("map_preview_size must be a positive integer")
+            raise ValueError(f"'map_preview_size' must be a positive integer. You entered: {v}")
         return v
 
-    @field_validator(
-        "sound_volume_start_file",
-        "sound_volume_success_file",
-        "sound_volume_failure_file",
-    )
+    @field_validator("start_sound_volume", "success_sound_volume", "failure_sound_volume")
     def volumes_between_0_and_1(cls, v: float, info: FieldValidationInfo) -> float:
         """
         Ensures volume is between 0.0 and 1.0.
         """
         if not (0.0 <= v <= 1.0):
-            alias = info.data.get("alias", "unknown field")
-            raise ValueError(f"{alias} must be between 0.0 and 1.0")
+            raise ValueError(
+                f"The volume for '{info.field_name}' must be between 0.0 and 1.0. You entered: {v}"
+            )
         return v
 
     @field_validator(
-        "sound_start_file",
-        "sound_success_file",
-        "sound_failure_file",
-        "previews_output_folder",
-        "rclone_folder",
+        "sound_start_filepath",
+        "sound_success_filepath",
+        "sound_failure_filepath",
+        "previews_output_dir",
     )
     def path_must_exist(cls, v: Path, info: FieldValidationInfo) -> Path:
         """
         Ensures the given path exists on disk.
         """
         if not v.exists():
-            alias = info.data.get("alias", "unknown field")
-            raise ValueError(f"{alias} does not exist: {v}")
+            raise ValueError(
+                f"The path specified for '{info.field_name}' does not exist:\n  {v}\n"
+                f"Please double-check the path in your configuration."
+            )
         return v.resolve()
 
     @field_validator("rclone_executable")
-    def check_rclone_executable_exists(
-        cls, v: Path | None, info: FieldValidationInfo
-    ) -> Path | None:
+    def rclone_executable_must_exist_if_needed(cls, v: Path, info: FieldValidationInfo) -> Path:
         """
-        Ensures rclone is present if rclone upload method is selected.
+        Ensures rclone executable exists if rclone upload method is selected.
         """
         if info.data.get("upload_method") == "rclone":
-            if not v or not v.exists():
-                raise ValueError(f"rclone executable not found at {v}")
+            if not v.exists():
+                raise ValueError(
+                    f"The rclone executable was not found at the expected location:\n  {v}\n"
+                    f"Make sure 'rclone_executable' is correct and points to the binary."
+                )
+        return v.resolve()
+
+    @field_validator("remote_upload_dir")
+    def remote_upload_dir_must_be_valid_path(cls, v: Path, info: FieldValidationInfo) -> Path:
+        """
+        Ensures remote upload dir is a syntactically valid path when using rclone.
+        Does NOT check if the path exists (since it's a remote target).
+        """
+        if info.data.get("upload_method") == "rclone":
+            try:
+                _ = str(v)  # forces path parsing
+            except Exception:
+                raise ValueError(f"'remote_upload_dir' is not a valid path string: {v}")
+        return v
+
+    @field_validator("rclone_remote_service")
+    def check_rclone_remote_service_if_needed(cls, v: str, info: FieldValidationInfo) -> str:
+        """
+        Ensures the rclone remote service name is set if rclone is used.
+        """
+        if info.data.get("upload_method") == "rclone" and not v.strip():
+            raise ValueError("'rclone_remote_service' must be set when using rclone upload.")
+        return v
+
+    @field_validator("file_monitor_filepath")
+    def check_file_monitor_filepath_if_used(cls, v: Path, info: FieldValidationInfo) -> Path:
+        """
+        Validates file path only when using file monitor as input method.
+        """
+        if info.data.get("map_exchange_input_method") == "file_monitor":
+            if not v.exists():
+                raise ValueError(
+                    f"The path specified for 'file_monitor_filepath' does not exist:\n  {v}\n"
+                    f"Check your 'file_monitor_filepath' setting."
+                )
+        return v
+
+    @field_validator("map_exchange_input_poll_interval_in_seconds")
+    def check_map_exchange_input_poll_interval(cls, v: float, info: FieldValidationInfo) -> float:
+        """
+        Ensures polling interval is valid only when clipboard monitor is used.
+        """
+        if info.data.get("map_exchange_input_method") == "clipboard_monitor" and v <= 0:
+            raise ValueError(
+                f"'map_exchange_input_poll_interval_in_seconds' must be greater than 0 "
+                f"when using 'clipboard_monitor'. You entered: {v}"
+            )
+        return v
+
+    @field_validator("factorio_locator_poll_interval_in_seconds")
+    def check_factorio_locator_poll_interval(cls, v: float, info: FieldValidationInfo) -> float:
+        """
+        Ensures polling interval is valid only when using the active window monitor.
+        """
+        if info.data.get("factorio_locator_method") == "active_window_monitor" and v <= 0:
+            raise ValueError(
+                f"'factorio_locator_poll_interval_in_seconds' must be greater than 0 "
+                f"when using 'active_window_monitor'. You entered: {v}"
+            )
         return v
 
     @field_validator("fixed_path_factorio_executable")
-    def check_factorio_executable_exists(
-        cls, v: Path | None, info: FieldValidationInfo
-    ) -> Path | None:
+    def check_factorio_executable_exists(cls, v: Path, info: FieldValidationInfo) -> Path:
         """
-        Checks that the fixed Factorio path is valid if used.
+        Checks that the Factorio executable path is valid if fixed path mode is used.
         """
-        if info.data.get("factorio_locator_method") == "fixed_path" and v and not v.exists():
-            raise ValueError(f"Factorio executable not found at {v}")
-        return v
-
-    @field_validator("active_window_poll_interval_in_seconds")
-    def check_poll_interval_if_active_window(cls, v: int, info: FieldValidationInfo) -> int:
-        """
-        Ensures polling interval is > 0 when using active window locator.
-        """
-        if info.data.get("factorio_locator_method") == "active_window" and v <= 0:
+        if info.data.get("factorio_locator_method") == "fixed_path" and not v.exists():
             raise ValueError(
-                "active_window_poll_interval_in_seconds must be > 0 for active_window mode"
+                f"The Factorio executable specified does not exist:\n  {v}\n"
+                f"Check your 'fixed_path_factorio_executable' setting."
             )
         return v
 
     @field_validator("planet_names")
     def planets_cannot_be_empty(cls, v: list[str]) -> list[str]:
         """
-        Validates that planet list is not empty.
+        Validates that the list of planets is not empty.
         """
         if not v:
-            raise ValueError("planet_names cannot be empty")
-        return v
-
-    @field_validator("upload_method")
-    def check_upload_method(cls, v: str) -> str:
-        """
-        Validates upload method value.
-        """
-        if v not in ("rclone", "none"):
-            raise ValueError("upload_method must be 'rclone' or 'none'")
-        return v
-
-    @field_validator("map_exchange_input_method")
-    def validate_map_method(cls, v: str) -> str:
-        """
-        Validates the map exchange string input method.
-        """
-        valid = {"clipboard_auto", "clipboard_hotkey", "file_hotkey", "dialog_hotkey"}
-        if v not in valid:
-            raise ValueError(f"Invalid map_exchange_input_method: {v}")
-        return v
-
-    @field_validator("factorio_locator_method")
-    def validate_locator_method(cls, v: str) -> str:
-        """
-        Validates the Factorio path locator method.
-        """
-        if v not in {"fixed_path", "active_window"}:
-            raise ValueError("factorio_locator_method must be 'fixed_path' or 'active_window'")
+            raise ValueError(
+                "The list 'planet_names' cannot be empty. "
+                "Please specify at least one planet for preview generation."
+            )
         return v

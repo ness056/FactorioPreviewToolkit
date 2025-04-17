@@ -5,6 +5,7 @@ import threading
 import pyperclip
 
 from src.FactorioPreviewToolkit.map_string_provider.base import MapStringProvider
+from src.FactorioPreviewToolkit.shared.config import Config
 from src.FactorioPreviewToolkit.shared.structured_logger import log, log_section
 from src.FactorioPreviewToolkit.shared.utils import is_valid_map_string
 
@@ -18,19 +19,18 @@ class ClipboardMapStringProvider(MapStringProvider):
     def __init__(
         self,
         on_new_map_string: collections.abc.Callable[[str], None],
-        poll_interval: float = 0.5,
     ):
         """
         Sets up the clipboard monitor and polling interval.
         """
         super().__init__(on_new_map_string)
-        self._poll_interval = poll_interval
+        self._poll_interval = Config.get().factorio_locator_poll_interval_in_seconds
         self._last_map_string = ""
         self._stop_flag = threading.Event()
         self._thread = threading.Thread(
             target=self._run,
             name="ClipboardMonitor",
-            daemon=False,
+            daemon=True,
         )
 
     def start(self) -> None:

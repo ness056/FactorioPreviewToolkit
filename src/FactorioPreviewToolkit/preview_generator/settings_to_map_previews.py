@@ -30,7 +30,7 @@ def prepare_preview_generation() -> tuple[Path, int]:
     """
     Validates the seed and loads the preview width from config.
     """
-    settings_path = Path(constants.MAP_GEN_SETTINGS_PATH)
+    settings_path = Path(constants.MAP_GEN_SETTINGS_FILEPATH)
     _extract_seed(settings_path)
     preview_width = Config.get().map_preview_size
     return settings_path, preview_width
@@ -61,7 +61,7 @@ def _generate_preview_for_planet(
     """
     Generates a single preview image for one planet using Factorio CLI.
     """
-    output = Config.get().previews_output_folder / f"{planet}.png"
+    output = Config.get().previews_output_dir / f"{planet}.png"
 
     args = [
         f"--generate-map-preview={output}",

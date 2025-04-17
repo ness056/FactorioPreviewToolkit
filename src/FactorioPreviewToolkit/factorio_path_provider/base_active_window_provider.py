@@ -8,7 +8,7 @@ from src.FactorioPreviewToolkit.shared.config import Config
 from src.FactorioPreviewToolkit.shared.structured_logger import log, log_section
 
 
-class ActiveWindowProvider(FactorioPathProvider):
+class BaseActiveWindowProvider(FactorioPathProvider):
     """
     Abstract base class
     Continuously monitors the active window to detect if a Factorio instance is running.
@@ -20,9 +20,9 @@ class ActiveWindowProvider(FactorioPathProvider):
     def __init__(self, on_new_factorio_path: collections.abc.Callable[[Path], None]):
         super().__init__(on_new_factorio_path)
         self._current_path: Path | None = None
-        self._poll_interval = Config.get().active_window_poll_interval_in_seconds
+        self._poll_interval = Config.get().factorio_locator_poll_interval_in_seconds
         self._stop_flag = threading.Event()
-        self._thread = threading.Thread(target=self._run, name="ActiveWindowWatcher", daemon=False)
+        self._thread = threading.Thread(target=self._run, name="ActiveWindowWatcher", daemon=True)
 
     def start(self) -> None:
         """Starts the background thread for monitoring the active window."""
@@ -36,7 +36,6 @@ class ActiveWindowProvider(FactorioPathProvider):
         """Stops the background thread monitoring the active window."""
         with log_section("🛑 Stopping Active Window Provider monitoring..."):
             self._stop_flag.set()
-            self._thread.join()
             log.info("✅ Active Window Provider monitoring stopped.")
 
     def _run(self) -> None:

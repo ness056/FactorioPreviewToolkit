@@ -5,13 +5,13 @@ import psutil
 import win32gui
 import win32process
 
-from src.FactorioPreviewToolkit.factorio_path_provider.active_window_provider import (
-    ActiveWindowProvider,
+from src.FactorioPreviewToolkit.factorio_path_provider.base_active_window_provider import (
+    BaseActiveWindowProvider,
 )
 from src.FactorioPreviewToolkit.shared.structured_logger import log
 
 
-class WindowsActiveWindowProvider(ActiveWindowProvider):
+class WindowsActiveWindowProvider(BaseActiveWindowProvider):
     """
     Windows-specific implementation of ActiveWindowProvider.
     """
@@ -37,5 +37,4 @@ class WindowsActiveWindowProvider(ActiveWindowProvider):
                 return Path(executable_path)
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) as e:
             log.error(f"Error getting Factorio executable path: {e}")
-            return None
         return None

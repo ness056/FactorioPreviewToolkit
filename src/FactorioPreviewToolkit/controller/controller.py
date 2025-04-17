@@ -47,16 +47,20 @@ class PreviewController:
                 except queue.Empty:
                     continue
 
-                if event_type == "map_string":
-                    assert isinstance(data, str)
-                    self._latest_map_string = data
-                    self._map_string_analysed = False
-                    log.info(f"✅ Updated map exchange string: {self._latest_map_string}")
+                match event_type:
+                    case "map_string":
+                        assert isinstance(data, str)
+                        self._latest_map_string = data
+                        self._map_string_analysed = False
+                        log.info(f"✅ Updated map exchange string: {self._latest_map_string}")
 
-                elif event_type == "factorio_path":
-                    assert isinstance(data, Path)
-                    self._latest_factorio_path = data
-                    log.info(f"✅ Updated Factorio path: {self._latest_factorio_path}")
+                    case "factorio_path":
+                        assert isinstance(data, Path)
+                        self._latest_factorio_path = data
+                        log.info(f"✅ Updated Factorio path: {self._latest_factorio_path}")
+
+                    case _:
+                        raise ValueError(f"❌ Unknown event type received: {event_type!r}")
 
                 if (
                     self._latest_map_string

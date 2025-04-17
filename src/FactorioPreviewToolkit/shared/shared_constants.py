@@ -10,27 +10,36 @@ class Constants:
     Some directories are created on import to ensure availability.
     """
 
-    # Common base directories
+    # === Project & Config ===
     BASE_PROJECT_DIR = get_project_root()
-    BASE_TEMP_DIR = BASE_PROJECT_DIR / "temp_files"
-    BASE_TEMP_DIR.mkdir(parents=True, exist_ok=True)  # Create directories if they don't exist
+    PREVIEW_TOOLKIT_CONFIG_FILEPATH = BASE_PROJECT_DIR / "config.ini"
+    FACTORIO_CONFIG_FILENAME = "factorio_config.ini"
 
-    LOG_DIR = BASE_PROJECT_DIR / "logs"
-    LOG_DIR.mkdir(parents=True, exist_ok=True)
-    PREVIEW_TOOLKIT_CONFIG_PATH = BASE_PROJECT_DIR / "config.ini"
+    # === Logging & Assets ===
+    LOGS_DIR = BASE_PROJECT_DIR / "logs"
     BASE_ASSETS_DIR = BASE_PROJECT_DIR / "assets"
-    FACTORIO_WRITE_DATA_PATH = BASE_TEMP_DIR / "data"
-    FACTORIO_LOCK_PATH = FACTORIO_WRITE_DATA_PATH / ".lock"
+
+    # === Temporary / Working Directories ===
+    BASE_TEMP_DIR = BASE_PROJECT_DIR / "temp_files"
+    FACTORIO_WRITE_DATA_DIR = BASE_TEMP_DIR / "data"
+    SCRIPT_OUTPUT_DIR = FACTORIO_WRITE_DATA_DIR / "script-output"
+    MAP_GEN_SETTINGS_FILEPATH = BASE_TEMP_DIR / "map-gen-settings.json"
+
+    # === Dummy Save for Settings Generation ===
     DUMMY_SAVE_TO_CREATE_MAP_GEN_SETTINGS_PATH = (
         BASE_TEMP_DIR / "dummy-save-to-create-map-gen-settings"
     )
-    CONTROL_LUA_PATH = DUMMY_SAVE_TO_CREATE_MAP_GEN_SETTINGS_PATH / "control.lua"
-    SCRIPT_OUTPUT_DIR = BASE_TEMP_DIR / "data" / "script-output"
-    COMBINED_MAP_GEN_SETTINGS_FILENAME = "combined-map-gen-settings.json"
-    COMBINED_MAP_GEN_SETTINGS_PATH = SCRIPT_OUTPUT_DIR / COMBINED_MAP_GEN_SETTINGS_FILENAME
-    MAP_GEN_SETTINGS_PATH = BASE_TEMP_DIR / "map-gen-settings.json"
+    CONTROL_LUA_FILEPATH = DUMMY_SAVE_TO_CREATE_MAP_GEN_SETTINGS_PATH / "control.lua"
+
+    # === File Naming & Generated Outputs ===
     LINK_OUTPUT_FILENAME = "output_links.txt"
-    FACTORIO_CONFIG_FILENAME = "factorio_config.ini"
+    COMBINED_MAP_GEN_SETTINGS_FILENAME = "combined-map-gen-settings.json"
+    COMBINED_MAP_GEN_SETTINGS_FILEPATH = SCRIPT_OUTPUT_DIR / COMBINED_MAP_GEN_SETTINGS_FILENAME
+    FACTORIO_LOCK_FILEPATH = FACTORIO_WRITE_DATA_DIR / ".lock"
+
+    # === Ensure required directories exist ===
+    BASE_TEMP_DIR.mkdir(parents=True, exist_ok=True)
+    LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
     @property
     def FACTORIO_CONFIG_PATH(self) -> Path:
@@ -47,7 +56,7 @@ class Constants:
                     ; version=12
                     [path]
                     read-data=__PATH__executable__/../../data
-                    write-data={self.FACTORIO_WRITE_DATA_PATH}
+                    write-data={self.FACTORIO_WRITE_DATA_DIR}
                     """
                 )
                 with open(config_path, "w") as config_file:

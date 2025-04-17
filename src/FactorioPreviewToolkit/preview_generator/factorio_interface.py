@@ -14,7 +14,7 @@ def wait_for_factorio_lock_to_release(timeout_in_sec: int = 30) -> bool:
     Waits for the Factorio lock file to be released, up to a timeout.
     """
     start_time = time.time()
-    lock_file = constants.FACTORIO_LOCK_PATH
+    lock_file = constants.FACTORIO_LOCK_FILEPATH
 
     while lock_file.exists():
         log.info(f"📋 Waiting for '{lock_file}' release.")

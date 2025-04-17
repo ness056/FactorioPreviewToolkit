@@ -25,6 +25,9 @@ build/
 third_party/*
 !third_party/**/.gitkeep
 
+# Ignore specific root files
+map_string.txt
+
 # ==============================================================================
 # 🐍 Python-Related Ignores
 # ==============================================================================

@@ -20,24 +20,27 @@ def get_factorio_path_provider(
     based on the configured locator method and operating system.
     """
     config = Config.get()
-    method = config.factorio_locator_method
+    factorio_locator_method = config.factorio_locator_method
+
     with log_section("🏗️ Selecting Factorio path provider..."):
-        if method == "fixed_path":
-            log.info("✅ Using FixedPathProvider.")
-            return FixedPathProvider(on_new_factorio_path)
+        match factorio_locator_method:
+            case "fixed_path":
+                log.info("✅ Using FixedPathProvider.")
+                return FixedPathProvider(on_new_factorio_path)
 
-        elif method == "active_window":
-            log.info("✅ Using ActiveWindowProvider.")
+            case "active_window_monitor":
+                log.info("✅ Using ActiveWindowProvider.")
+                system = platform.system()
+                if system == "Windows":
+                    return WindowsActiveWindowProvider(on_new_factorio_path)
+                # elif system == "Darwin":  # TODO: AntiElitz
+                #     return MacActiveWindowProvider(on_new_factorio_path)
+                # elif system == "Linux":  # TODO: AntiElitz
+                #     return LinuxActiveWindowProvider(on_new_factorio_path)
+                else:
+                    raise ValueError(f"❌ Unsupported platform: {system}")
 
-            system = platform.system()
-            if system == "Windows":
-                return WindowsActiveWindowProvider(on_new_factorio_path)
-            # elif system == "Darwin":  # macOS  # TODO: AntiElitz: Implement active window provider for Mac
-            #     return MacActiveWindowProvider(on_new_factorio_path)
-            # elif system == "Linux":  # TODO: AntiElitz: Implement active window provider for Linux
-            #     return LinuxActiveWindowProvider(on_new_factorio_path)
-            else:
-                raise ValueError(f"❌ Unsupported platform: {system}")
-
-        else:
-            raise ValueError(f"❌ Unknown factorio_locator_method: {method}")
+            case _:
+                raise ValueError(
+                    f"❌ Unsupported map_exchange_input_method: {factorio_locator_method}. This can only occur if config schema validation fails"
+                )
