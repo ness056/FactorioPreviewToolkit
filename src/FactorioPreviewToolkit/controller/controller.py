@@ -40,7 +40,7 @@ class PreviewController:
         Processes events from the event queue. This method listens for new map strings and Factorio paths,
         and triggers the map processing pipeline when both are available.
         """
-        with log_section("🔍 Processing events..."):
+        with log_section("💤 Waiting for events..."):
             while self._running:
                 try:
                     event_type, data = self._event_queue.get(timeout=0.5)
@@ -88,7 +88,7 @@ class PreviewController:
             self._map_string_provider.stop()
         if self._factorio_path_provider is not None:
             self._factorio_path_provider.stop()
-        log.info("👋 Controller stopped successfully.")
+        log.info("✅ Controller stopped successfully.")
         self._running = False
 
     def start(self) -> None:

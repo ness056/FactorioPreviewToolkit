@@ -11,6 +11,7 @@ Also includes optional automatic cleanup to limit the number of logs.
 
 import sys
 from datetime import datetime
+from io import TextIOWrapper
 from pathlib import Path
 from typing import TextIO, cast
 
@@ -22,9 +23,13 @@ class TeeStream:
     """
 
     def __init__(self, log_file: Path, original: TextIO):
+        if original.encoding is None or original.encoding.lower() != "utf-8":
+            original = TextIOWrapper(
+                original.buffer, encoding="utf-8", line_buffering=True, errors="replace"
+            )
         self.original = original
         self.log = log_file.open("w", encoding="utf-8")
-        self.encoding = original.encoding
+        self.encoding = self.original.encoding
 
     def write(self, message: str) -> int:
         self.original.write(message)

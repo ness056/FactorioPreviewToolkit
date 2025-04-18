@@ -1,12 +1,40 @@
-import sys
+import subprocess
+import time
 from pathlib import Path
 from typing import Literal, Any
 
 from pydantic import BaseModel, model_validator, field_validator
-from pydantic_core.core_schema import FieldValidationInfo
+from pydantic_core.core_schema import FieldValidationInfo, ValidationInfo
+from typing_extensions import Self
 
 from src.FactorioPreviewToolkit.shared.shared_constants import constants
-from src.FactorioPreviewToolkit.shared.utils import resolve_relative_to_project_root
+from src.FactorioPreviewToolkit.shared.structured_logger import log
+from src.FactorioPreviewToolkit.shared.utils import (
+    resolve_relative_to_project_root,
+    detect_os,
+    get_supported_architecture,
+)
+
+
+def is_rclone_remote_configured(remote_name: str, rclone_path: Path) -> bool:
+    """
+    Checks if a given rclone remote is configured.
+    """
+    result = subprocess.run(
+        [str(rclone_path), "listremotes"],
+        capture_output=True,
+        text=True,
+    )
+    return f"{remote_name}:" in result.stdout
+
+
+def run_dropbox_auto_setup(rclone_path: Path) -> None:
+    """
+    Runs `rclone config create` to set up a Dropbox remote called FactorioPreviewToolkitDropbox.
+    """
+    subprocess.run(
+        [str(rclone_path), "config", "create", "FactorioPreviewToolkitDropbox", "dropbox"]
+    )
 
 
 class Settings(BaseModel):
@@ -29,7 +57,6 @@ class Settings(BaseModel):
     map_preview_size: int
     planet_names: list[str]
     previews_output_dir: Path
-    preview_output_file: Path  # Derived
 
     # === Sound Settings ===
     sound_start_filepath: Path
@@ -43,7 +70,8 @@ class Settings(BaseModel):
     upload_method: Literal["rclone", "skip"]
     rclone_remote_service: str = ""
     remote_upload_dir: Path = Path("not-used")
-    rclone_executable: Path = Path("not-used")  # Derived
+    rclone_executable: Path = Path("not-used")
+    preview_links_filepath: Path  # Derived
 
     class Config:
         frozen = True
@@ -54,8 +82,10 @@ class Settings(BaseModel):
         Expands .app paths, resolves relative paths, and computes derived fields before validation.
         """
         cls._expand_mac_app_path(values)
+        cls._resolve_auto_rclone_path(values)
         cls._resolve_paths_relative_to_root(values)
         cls._compute_preview_output_path(values)
+        cls._resolve_rclone_remote_aliases(values)
         return values
 
     @staticmethod
@@ -67,13 +97,33 @@ class Settings(BaseModel):
         path = values.get("fixed_path_factorio_executable")
         if (
             path
-            and sys.platform == "darwin"
+            and detect_os() == "mac"
             and isinstance(path, (str, Path))
             and str(path).endswith(".app")
             and "factorio" in str(path).lower()
         ):
             values["fixed_path_factorio_executable"] = (
                 Path(path) / "Contents" / "MacOS" / "factorio"
+            )
+
+    @staticmethod
+    def _resolve_auto_rclone_path(values: dict[str, Any]) -> None:
+        """
+        Replaces 'auto' in rclone_executable with the appropriate bundled binary path.
+        Throws if the current OS/architecture is unsupported.
+        """
+        if values.get("rclone_executable") == "auto":
+            arch = get_supported_architecture()
+            if arch == "unsupported":
+                raise RuntimeError(
+                    f"❌ Unsupported architecture for bundled rclone.\n"
+                    f"You must manually download and install rclone and configure the full path via 'rclone_executable' in your config file.\n"
+                )
+
+            os_name = detect_os()
+            binary_name = "rclone.exe" if os_name == "windows" else "rclone"
+            values["rclone_executable"] = (
+                Path("third_party") / "rclone" / f"{os_name}" / f"{arch}" / binary_name
             )
 
     @staticmethod
@@ -89,7 +139,6 @@ class Settings(BaseModel):
             "sound_failure_filepath",
             "file_monitor_filepath",
             "rclone_executable",
-            "remote_upload_dir",
         ]:
             if values.get(name) is not None:
                 values[name] = resolve_relative_to_project_root(values[name])
@@ -101,7 +150,46 @@ class Settings(BaseModel):
         """
         folder = values.get("previews_output_dir")
         if folder:
-            values["preview_output_file"] = folder / constants.LINK_OUTPUT_FILENAME
+            values["preview_links_filepath"] = folder / constants.LINK_OUTPUT_FILENAME
+
+    @staticmethod
+    def _resolve_rclone_remote_aliases(values: dict[str, Any]) -> None:
+        """
+        Replaces shorthand or special values like 'dropbox_auto' with the actual remote name.
+        """
+        if values.get("rclone_remote_service") == "dropbox_auto":
+            values["rclone_remote_service"] = "FactorioPreviewToolkitDropbox"
+
+    @model_validator(mode="after")
+    def validate_rclone_remote_setup(values: Self, info: ValidationInfo) -> Self:
+        """
+        Verifies rclone remote setup after all fields are available.
+        """
+        if values.upload_method != "rclone":
+            return values
+
+        remote_service = values.rclone_remote_service.strip()
+        if not remote_service:
+            raise ValueError("'rclone_remote_service' must be set when using rclone upload.")
+
+        if remote_service == "FactorioPreviewToolkitDropbox":
+            if remote_service == "FactorioPreviewToolkitDropbox":
+                for attempt in range(5):
+                    if is_rclone_remote_configured(
+                        "FactorioPreviewToolkitDropbox", values.rclone_executable
+                    ):
+                        break
+                    log.info(f"🕒 Waiting for Dropbox setup to complete (retry {attempt}/5)...")
+                    run_dropbox_auto_setup(values.rclone_executable)
+                    time.sleep(1)
+        else:
+            if not is_rclone_remote_configured(remote_service, values.rclone_executable):
+                raise ValueError(
+                    f"❌ The rclone remote '{remote_service}' is not configured.\n"
+                    "Please run `rclone config` manually to add it, or use 'dropbox_auto'."
+                )
+
+        return values
 
     # === Validators ===
 

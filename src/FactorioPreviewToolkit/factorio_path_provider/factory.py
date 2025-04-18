@@ -22,7 +22,7 @@ def get_factorio_path_provider(
     config = Config.get()
     factorio_locator_method = config.factorio_locator_method
 
-    with log_section("🏗️ Selecting Factorio path provider..."):
+    with log_section("🔀 Selecting Factorio path provider..."):
         match factorio_locator_method:
             case "fixed_path":
                 log.info("✅ Using FixedPathProvider.")

@@ -1,24 +1,21 @@
 [project]
 name = "factorio-preview-generator"
-version = "0.1.0"
+version = "0.1.28"
 description = "Tool to generate map previews for Factorio speedruns."
 authors = [
-    { name = "Sebastian Berghoff" }
+    { name = "Sebastian Berghoff (AntiElitz)" },
 ]
 readme = "README.md"
 requires-python = ">=3.10"
-
-# Runtime dependencies (used by both CLI and PyInstaller builds)
 dependencies = [
     "psutil==7.0.0",
     "pydantic==2.11.3",
     "pydantic_core==2.33.1",
     "pygame==2.6.1",
     "pyperclip==1.9.0",
-    "pywin32==310"
+    "pywin32==310",
 ]
 
-# Optional dev dependencies (install with `pip install .[dev]`)
 [project.optional-dependencies]
 dev = [
     "black",
@@ -27,28 +24,31 @@ dev = [
     "types-pyperclip",
     "pyinstaller",
     "pre-commit",
-    "pydantic[mypy]"
+    "pydantic[mypy]",
+    "tomli",
+    "tomli-w",
 ]
 
-# Optional CLI command for script users (if desired)
 [project.scripts]
 factorio-preview = "your_main_module.__main__:main"
 
-# Black formatter settings (used automatically by pre-commit + editors)
 [tool.black]
 line-length = 100
-target-version = ["py310"]
+target-version = [
+    "py310",
+]
 skip-string-normalization = false
 
-# Mypy configuration (helps plugin recognize Pydantic BaseModel correctly)
 [tool.mypy]
-plugins = ["pydantic.mypy"]
+plugins = [
+    "pydantic.mypy",
+]
 
-# Tell setuptools to look in ./src for actual packages
-[tool.setuptools]
-package-dir = { "" = "src" }
+[tool.setuptools.package-dir]
+"" = "src"
 
-# Build backend config
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = [
+    "setuptools>=61.0",
+]
 build-backend = "setuptools.build_meta"

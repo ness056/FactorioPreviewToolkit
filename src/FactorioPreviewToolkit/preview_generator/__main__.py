@@ -6,6 +6,7 @@ and runs preview generation for all configured planets.
 """
 
 import argparse
+import sys
 from pathlib import Path
 from typing import Sequence
 
@@ -53,11 +54,17 @@ def parse_arguments(argv: Sequence[str] | None = None) -> Args:
     """
     Parses and validates command-line arguments.
     """
-    parser = argparse.ArgumentParser(description="Factorio map preview generator")
-    parser.add_argument("factorio_path", type=Path, help="Path to Factorio installation directory")
-    parser.add_argument("map_string", type=str, help="Map exchange string to generate preview for")
-    args = parser.parse_args(argv)
+    raw_args = argv if argv is not None else sys.argv[1:]
 
+    if "--preview-generator-mode" in raw_args:
+        preview_index = raw_args.index("--preview-generator-mode")
+        raw_args = raw_args[preview_index + 1 :]
+
+    parser = argparse.ArgumentParser(description="Factorio map preview generator")
+    parser.add_argument("factorio_path", type=Path)
+    parser.add_argument("map_string", type=str)
+
+    args = parser.parse_args(raw_args)
     return Args(**vars(args))
 
 
@@ -65,18 +72,18 @@ def main(argv: Sequence[str] | None = None) -> None:
     """
     Runs the full preview generation pipeline from CLI arguments.
     """
-    with log_section("🚀 Preview Generator started. Processing map string..."):
-        arguments = parse_arguments(argv)
-        convert_exchange_string_to_settings(arguments.factorio_path, arguments.map_string)
-        generate_previews_from_settings(arguments.factorio_path)
-        log.info("✅ Preview Generator completed successfully.")
-
-
-if __name__ == "__main__":
     try:
-        main()
+        with log_section("🚀 Preview Generator started. Processing map string..."):
+            arguments = parse_arguments(argv)
+            convert_exchange_string_to_settings(arguments.factorio_path, arguments.map_string)
+            generate_previews_from_settings(arguments.factorio_path)
+            log.info("✅ Preview Generator completed successfully.")
     except Exception:
         log.exception("❌ Preview Generator failed with an exception.")
         raise
     finally:
         log.info("👋 Preview Generator exited.")
+
+
+if __name__ == "__main__":
+    main()

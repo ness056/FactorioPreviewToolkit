@@ -32,7 +32,7 @@ class Config:
         Parses the config.ini file, flattens sections, normalizes data,
         and validates it against the Settings model.
         """
-        with log_section("🔍 Initializing config..."):
+        with log_section("⚙️ Initializing config..."):
             config_path = cls._path
 
             if not config_path.exists():

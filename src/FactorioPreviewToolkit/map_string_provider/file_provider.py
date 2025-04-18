@@ -34,7 +34,7 @@ class FileMapStringProvider(MapStringProvider):
         """
         Starts the file monitoring thread.
         """
-        log.info(f"🚀 Starting FileMapStringProvider... (watching {self._filepath})")
+        log.info(f"🟢 Starting FileMapStringProvider... (watching {self._filepath})")
         self._stop_flag.clear()
         self._thread.start()
 
@@ -51,7 +51,7 @@ class FileMapStringProvider(MapStringProvider):
         """
         Loop that watches the file and triggers callback on new valid map string.
         """
-        with log_section(f"📁 Watching file for map exchange strings: {self._filepath}"):
+        with log_section(f"📋 Watching file for map exchange strings: {self._filepath}"):
             while not self._stop_flag.is_set():
                 try:
                     if self._filepath.exists():

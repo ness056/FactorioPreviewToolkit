@@ -11,7 +11,7 @@ def _extract_seed(settings_path: Path) -> int:
     """
     Loads and validates the seed from the given map-gen-settings file.
     """
-    with log_section("🔢 Extracting seed from map-gen-settings..."):
+    with log_section("🌱 Extracting seed from map-gen-settings..."):
         try:
             with settings_path.open("r", encoding="utf-8") as f:
                 data = json.load(f)

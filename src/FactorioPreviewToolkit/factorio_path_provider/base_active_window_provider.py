@@ -27,7 +27,7 @@ class BaseActiveWindowProvider(FactorioPathProvider):
     def start(self) -> None:
         """Starts the background thread for monitoring the active window."""
         log.info(
-            f"🚀 Starting Active Window Provider monitoring with a poll interval of {self._poll_interval} seconds..."
+            f"🟢 Starting Active Window Provider monitoring with a poll interval of {self._poll_interval} seconds..."
         )
         self._stop_flag.clear()
         self._thread.start()

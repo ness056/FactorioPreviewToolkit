@@ -18,7 +18,7 @@ def get_map_string_provider(
     """
     config = Config.get()
     map_exchange_input_method = config.map_exchange_input_method
-    with log_section("🔌 Selecting map string provider..."):
+    with log_section("🔀 Selecting map string provider..."):
         if map_exchange_input_method == "clipboard_monitor":
             log.info("✅ Using ClipboardMapStringProvider (auto mode).")
             return ClipboardMapStringProvider(on_new_map_string)

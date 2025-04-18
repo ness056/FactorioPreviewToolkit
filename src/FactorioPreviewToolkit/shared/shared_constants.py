@@ -32,7 +32,7 @@ class Constants:
     CONTROL_LUA_FILEPATH = DUMMY_SAVE_TO_CREATE_MAP_GEN_SETTINGS_PATH / "control.lua"
 
     # === File Naming & Generated Outputs ===
-    LINK_OUTPUT_FILENAME = "output_links.txt"
+    LINK_OUTPUT_FILENAME = "preview_links.txt"
     COMBINED_MAP_GEN_SETTINGS_FILENAME = "combined-map-gen-settings.json"
     COMBINED_MAP_GEN_SETTINGS_FILEPATH = SCRIPT_OUTPUT_DIR / COMBINED_MAP_GEN_SETTINGS_FILENAME
     FACTORIO_LOCK_FILEPATH = FACTORIO_WRITE_DATA_DIR / ".lock"

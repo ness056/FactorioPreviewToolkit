@@ -7,17 +7,19 @@ from src.FactorioPreviewToolkit.shared.structured_logger import log, log_section
 
 def _write_links_file(planet_links: dict[str, str]) -> None:
     """
-    Writes a summary file with links to each uploaded image, one per planet.
+    Writes a JavaScript config object with links to each uploaded image, one per planet.
     """
     with log_section("📝 Saving download links to file..."):
         config = Config.get()
         try:
-            with config.preview_output_file.open("w", encoding="utf-8") as f:
+            with config.preview_links_filepath.open("w", encoding="utf-8") as f:
+                f.write("const planetConfig = {\n")
                 for planet, url in planet_links.items():
-                    f.write(f"{planet}: {url}\n")
-            log.info(f"✅ Download links saved to: {config.preview_output_file}")
+                    f.write(f'  {planet}: "{url}",\n')
+                f.write("};\n")
+            log.info(f"✅ Download links saved to: {config.preview_links_filepath}")
         except Exception:
-            log.error(f"❌ Failed to write output file: {config.preview_output_file}")
+            log.error(f"❌ Failed to write output file: {config.preview_links_filepath}")
             raise
 
 
@@ -32,7 +34,7 @@ class BaseUploader(ABC):
         Uploads all planet preview images and saves the resulting download links to a file.
         """
         config = Config.get()
-        with log_section("🚀 Starting image upload..."):
+        with log_section("🖼️ Starting image upload..."):
             planet_links: dict[str, str] = {}
 
             for planet in config.planet_names:

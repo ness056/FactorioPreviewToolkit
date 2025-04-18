@@ -56,7 +56,7 @@ class RcloneUploader(BaseUploader):
                 f"Rclone remote '{remote_name}' was not configured. Run 'rclone config' and restart the application"
             )
 
-        with log_section(f"⬆️ Uploading {local_path.name} to {remote_target}..."):
+        with log_section(f"☁️ Uploading {local_path.name} to {remote_target}..."):
             try:
                 result = subprocess.run(
                     [rclone_executable, "copy", str(local_path), remote_target],

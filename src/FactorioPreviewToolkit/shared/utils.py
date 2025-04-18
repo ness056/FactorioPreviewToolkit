@@ -1,6 +1,8 @@
+import platform
 import re
 import sys
 from pathlib import Path
+from typing import Literal
 
 
 def is_valid_map_string(s: str) -> bool:
@@ -27,3 +29,43 @@ def resolve_relative_to_project_root(path: str | Path) -> Path:
     if path.is_absolute():
         return path
     return (get_project_root() / path).resolve()
+
+
+def get_script_base() -> Path:
+    """
+    Returns the root directory where assets and config files are located.
+    Supports both development and PyInstaller bundle modes.
+    """
+    if hasattr(sys, "_MEIPASS"):
+        return Path(getattr(sys, "_MEIPASS"))
+    return Path(__file__).resolve().parents[2]
+
+
+def detect_os() -> Literal["windows", "linux", "mac"]:
+    """
+    Detects and returns the current OS name used in bundled rclone folder names.
+    Raises an exception if the OS is unsupported.
+    """
+    os_name = platform.system().lower()
+    match os_name:
+        case "windows":
+            return "windows"
+        case "linux":
+            return "linux"
+        case "darwin":
+            return "mac"
+        case _:
+            raise RuntimeError(f"❌ Unsupported OS {os_name}")
+
+
+def get_supported_architecture() -> Literal["intel_amd64", "arm64", "unsupported"]:
+    """
+    Returns the normalized architecture name used in bundled rclone folder names.
+    Returns "unsupported" if the architecture is not recognized.
+    """
+    arch_raw = platform.machine().lower()
+    if arch_raw in ("x86_64", "amd64", "amd"):
+        return "intel_amd64"
+    if arch_raw in ("arm64", "aarch64"):
+        return "arm64"
+    return "unsupported"

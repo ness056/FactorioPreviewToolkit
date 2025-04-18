@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 from threading import Lock, Thread
 
@@ -11,6 +12,7 @@ from src.FactorioPreviewToolkit.shared.sound import (
     play_start_sound,
 )
 from src.FactorioPreviewToolkit.shared.structured_logger import log
+from src.FactorioPreviewToolkit.shared.utils import get_script_base
 
 
 class MapProcessingPipeline:
@@ -52,14 +54,33 @@ class MapProcessingPipeline:
         """
         Sets up the generator and uploader subprocess executors.
         """
-        self.generator_executor = SingleProcessExecutor(
-            "Preview Generator",
-            ["-m", "src.FactorioPreviewToolkit.preview_generator", str(factorio_path), map_string],
-        )
-        self.uploader_executor = SingleProcessExecutor(
-            "Uploader",
-            ["-m", "src.FactorioPreviewToolkit.uploader", str(factorio_path)],
-        )
+        script_base = get_script_base()
+
+        if getattr(sys, "frozen", False):
+            # Frozen: use same EXE but route via flags
+            self.generator_executor = SingleProcessExecutor(
+                "Preview Generator",
+                [sys.executable, "--preview-generator-mode", str(factorio_path), map_string],
+            )
+            self.uploader_executor = SingleProcessExecutor(
+                "Uploader",
+                [sys.executable, "--uploader-mode", str(factorio_path)],
+            )
+        else:
+            # Dev: use `-m` style to run modules
+            self.generator_executor = SingleProcessExecutor(
+                "Preview Generator",
+                [
+                    "-m",
+                    "src.FactorioPreviewToolkit.preview_generator",
+                    str(factorio_path),
+                    map_string,
+                ],
+            )
+            self.uploader_executor = SingleProcessExecutor(
+                "Uploader",
+                ["-m", "src.FactorioPreviewToolkit.uploader", str(factorio_path)],
+            )
 
     def _start_worker_thread(self) -> None:
         """

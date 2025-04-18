@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 from enum import Enum, auto
@@ -54,7 +55,7 @@ class SingleProcessExecutor:
             if self._status != SubprocessStatus.NOT_RUN:
                 return False
 
-            log.info(f"🚀 Launching {self._process_name} subprocess with args: {self._args}...")
+            log.info(f"🟢 Launching {self._process_name} subprocess with args: {self._args}...")
             self._active_process = subprocess.Popen(
                 [sys.executable, "-u"] + self._args,
                 stdout=subprocess.PIPE,
@@ -62,6 +63,7 @@ class SingleProcessExecutor:
                 text=True,
                 encoding="utf-8",
                 errors="replace",
+                env={**os.environ, "PYTHONIOENCODING": "utf-8"},
             )
             self._status = SubprocessStatus.RUNNING
             return True

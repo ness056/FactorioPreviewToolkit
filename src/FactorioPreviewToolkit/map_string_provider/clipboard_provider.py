@@ -37,7 +37,7 @@ class ClipboardMapStringProvider(MapStringProvider):
         """
         Starts the clipboard monitoring thread.
         """
-        log.info("🚀 Starting Clipboard Monitor...")
+        log.info("🟢 Starting Clipboard Monitor...")
         self._stop_flag.clear()
         self._thread.start()
 

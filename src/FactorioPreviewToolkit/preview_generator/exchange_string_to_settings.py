@@ -89,7 +89,7 @@ def _extract_map_gen_settings_from_combined_json() -> None:
     """
     Extracts map-gen-settings from the combined-map-gen-settings JSON written by Factorio and writes it to file.
     """
-    with log_section("📤 Extracting map-gen-settings from combined JSON..."):
+    with log_section("🛠️ Extracting map-gen-settings from combined JSON..."):
         combined_path = constants.COMBINED_MAP_GEN_SETTINGS_FILEPATH
 
         with combined_path.open("r", encoding="utf-8") as f:
@@ -111,7 +111,7 @@ def _export_map_gen_settings_via_benchmark(factorio_path: Path) -> None:
     Runs dummy save in Factorio to trigger control.lua execution and produce output.
     """
     save_folder = constants.DUMMY_SAVE_TO_CREATE_MAP_GEN_SETTINGS_PATH
-    with log_section("🧪 Running Factorio to export map-gen-settings..."):
+    with log_section("🛠️ Running Factorio to export map-gen-settings..."):
         run_factorio_command(
             factorio_path,
             [
@@ -128,7 +128,7 @@ def convert_exchange_string_to_settings(factorio_path: Path, map_string: str) ->
     """
     Converts a map exchange string into a full map-gen-settings JSON file.
     """
-    with log_section("🧩 Converting map exchange string to map-gen-settings..."):
+    with log_section("🔄 Converting map exchange string to map-gen-settings..."):
         _create_dummy_save(factorio_path)
         _update_control_lua(map_string)
         _export_map_gen_settings_via_benchmark(factorio_path)

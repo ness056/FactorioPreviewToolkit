@@ -4,6 +4,7 @@ import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 from io import TextIOWrapper
+from typing import TextIO
 
 
 class NestingState(threading.local):
@@ -59,6 +60,7 @@ class IndentedFormatter(logging.Formatter):
         level = f"{record.levelname:<5}"
 
         prefix = get_logging_indent()
+
         super().format(record)
         message = record.getMessage()
 
@@ -68,14 +70,31 @@ class IndentedFormatter(logging.Formatter):
         return formatted_msg
 
 
+def _ensure_utf8_output(stream: TextIO) -> TextIO:
+    """
+    Wraps a text stream with UTF-8 encoding if not already enforced.
+    Handles environments where .buffer may not exist (e.g., PyInstaller).
+    """
+    try:
+        encoding = stream.encoding or ""
+    except Exception:
+        encoding = ""
+
+    if encoding.lower() != "utf-8":
+        if hasattr(stream, "buffer"):
+            return TextIOWrapper(stream.buffer, encoding="utf-8")
+        else:
+            # Can't fix encoding, fallback with warning
+            print("⚠️ stdout/stderr encoding is not UTF-8 and can't be replaced safely.")
+    return stream
+
+
 def setup_logger() -> logging.Logger:
     """
     Sets up the structured logger with custom formatting and UTF-8 stdout handling.
     """
-    if sys.stdout.encoding is None or sys.stdout.encoding.lower() != "utf-8":
-        sys.stdout = TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-    if sys.stderr.encoding is None or sys.stderr.encoding.lower() != "utf-8":
-        sys.stderr = TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
+    sys.stdout = _ensure_utf8_output(sys.stdout)
+    sys.stderr = _ensure_utf8_output(sys.stderr)
 
     formatter = IndentedFormatter(
         "%(asctime)s [PID:%(process)d, %(threadName)s] %(levelname)s: %(message)s"
@@ -89,7 +108,6 @@ def setup_logger() -> logging.Logger:
     logger.handlers.clear()
     logger.addHandler(stream_handler)
     logger.propagate = False
-
     return logger
 
 
