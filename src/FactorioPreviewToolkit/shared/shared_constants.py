@@ -19,6 +19,10 @@ class Constants:
     LOGS_DIR = BASE_PROJECT_DIR / "logs"
     BASE_ASSETS_DIR = BASE_PROJECT_DIR / "assets"
 
+    # === Output Folder for Generated Previews ===
+    PREVIEWS_OUTPUT_DIR = BASE_PROJECT_DIR / "previews"
+    PREVIEW_LINKS_FILEPATH = PREVIEWS_OUTPUT_DIR / "remote_preview_links.txt"
+
     # === Temporary / Working Directories ===
     BASE_TEMP_DIR = BASE_PROJECT_DIR / "temp_files"
     FACTORIO_WRITE_DATA_DIR = BASE_TEMP_DIR / "data"
@@ -40,6 +44,7 @@ class Constants:
     # === Ensure required directories exist ===
     BASE_TEMP_DIR.mkdir(parents=True, exist_ok=True)
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
+    PREVIEWS_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     @property
     def FACTORIO_CONFIG_PATH(self) -> Path:

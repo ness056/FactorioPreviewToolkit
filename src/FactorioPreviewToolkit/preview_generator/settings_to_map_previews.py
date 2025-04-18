@@ -3,6 +3,7 @@ from pathlib import Path
 
 from src.FactorioPreviewToolkit.preview_generator.factorio_interface import run_factorio_command
 from src.FactorioPreviewToolkit.shared.config import Config
+from src.FactorioPreviewToolkit.shared.shared_constants import Constants
 from src.FactorioPreviewToolkit.shared.shared_constants import constants
 from src.FactorioPreviewToolkit.shared.structured_logger import log, log_section
 
@@ -61,7 +62,7 @@ def _generate_preview_for_planet(
     """
     Generates a single preview image for one planet using Factorio CLI.
     """
-    output = Config.get().previews_output_dir / f"{planet}.png"
+    output = Constants.PREVIEWS_OUTPUT_DIR / f"{planet}.png"
 
     args = [
         f"--generate-map-preview={output}",

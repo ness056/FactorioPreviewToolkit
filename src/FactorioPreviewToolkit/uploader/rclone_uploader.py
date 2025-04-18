@@ -45,7 +45,7 @@ class RcloneUploader(BaseUploader):
         config = Config.get()
         rclone_executable = Config.get().rclone_executable
         remote_name = config.rclone_remote_service
-        remote_folder = config.remote_upload_dir
+        remote_folder = config.rclone_remote_upload_dir
         remote_target = f"{remote_name}:{remote_folder}"
         full_remote_path = f"{remote_target}/{remote_filename}"
 

@@ -16,6 +16,7 @@ logs/
 viewer/viewer-config.js
 dist/
 build/
+*.spec
 
 # Compiled/minified frontend assets
 *.min.js

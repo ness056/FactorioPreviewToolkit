@@ -7,7 +7,6 @@ from pydantic import BaseModel, model_validator, field_validator
 from pydantic_core.core_schema import FieldValidationInfo, ValidationInfo
 from typing_extensions import Self
 
-from src.FactorioPreviewToolkit.shared.shared_constants import constants
 from src.FactorioPreviewToolkit.shared.structured_logger import log
 from src.FactorioPreviewToolkit.shared.utils import (
     resolve_relative_to_project_root,
@@ -16,7 +15,7 @@ from src.FactorioPreviewToolkit.shared.utils import (
 )
 
 
-def is_rclone_remote_configured(remote_name: str, rclone_path: Path) -> bool:
+def _is_rclone_remote_configured(remote_name: str, rclone_path: Path) -> bool:
     """
     Checks if a given rclone remote is configured.
     """
@@ -28,7 +27,7 @@ def is_rclone_remote_configured(remote_name: str, rclone_path: Path) -> bool:
     return f"{remote_name}:" in result.stdout
 
 
-def run_dropbox_auto_setup(rclone_path: Path) -> None:
+def _run_dropbox_auto_setup(rclone_path: Path) -> None:
     """
     Runs `rclone config create` to set up a Dropbox remote called FactorioPreviewToolkitDropbox.
     """
@@ -56,7 +55,6 @@ class Settings(BaseModel):
     # === Preview Generation ===
     map_preview_size: int
     planet_names: list[str]
-    previews_output_dir: Path
 
     # === Sound Settings ===
     sound_start_filepath: Path
@@ -67,11 +65,11 @@ class Settings(BaseModel):
     failure_sound_volume: float
 
     # === Upload Settings ===
-    upload_method: Literal["rclone", "skip"]
+    upload_method: Literal["rclone", "local_sync", "skip"]
     rclone_remote_service: str = ""
-    remote_upload_dir: Path = Path("not-used")
+    rclone_remote_upload_dir: Path = Path("not-used")
     rclone_executable: Path = Path("not-used")
-    preview_links_filepath: Path  # Derived
+    local_sync_target_dir: Path = Path("not-used")
 
     class Config:
         frozen = True
@@ -84,7 +82,6 @@ class Settings(BaseModel):
         cls._expand_mac_app_path(values)
         cls._resolve_auto_rclone_path(values)
         cls._resolve_paths_relative_to_root(values)
-        cls._compute_preview_output_path(values)
         cls._resolve_rclone_remote_aliases(values)
         return values
 
@@ -133,24 +130,15 @@ class Settings(BaseModel):
         """
         for name in [
             "fixed_path_factorio_executable",
-            "previews_output_dir",
             "sound_start_filepath",
             "sound_success_filepath",
             "sound_failure_filepath",
             "file_monitor_filepath",
             "rclone_executable",
+            "local_sync_target_dir",
         ]:
             if values.get(name) is not None:
                 values[name] = resolve_relative_to_project_root(values[name])
-
-    @staticmethod
-    def _compute_preview_output_path(values: dict[str, Any]) -> None:
-        """
-        Computes the output file path used to link preview images.
-        """
-        folder = values.get("previews_output_dir")
-        if folder:
-            values["preview_links_filepath"] = folder / constants.LINK_OUTPUT_FILENAME
 
     @staticmethod
     def _resolve_rclone_remote_aliases(values: dict[str, Any]) -> None:
@@ -175,15 +163,15 @@ class Settings(BaseModel):
         if remote_service == "FactorioPreviewToolkitDropbox":
             if remote_service == "FactorioPreviewToolkitDropbox":
                 for attempt in range(5):
-                    if is_rclone_remote_configured(
+                    if _is_rclone_remote_configured(
                         "FactorioPreviewToolkitDropbox", values.rclone_executable
                     ):
                         break
                     log.info(f"🕒 Waiting for Dropbox setup to complete (retry {attempt}/5)...")
-                    run_dropbox_auto_setup(values.rclone_executable)
+                    _run_dropbox_auto_setup(values.rclone_executable)
                     time.sleep(1)
         else:
-            if not is_rclone_remote_configured(remote_service, values.rclone_executable):
+            if not _is_rclone_remote_configured(remote_service, values.rclone_executable):
                 raise ValueError(
                     f"❌ The rclone remote '{remote_service}' is not configured.\n"
                     "Please run `rclone config` manually to add it, or use 'dropbox_auto'."
@@ -217,7 +205,6 @@ class Settings(BaseModel):
         "sound_start_filepath",
         "sound_success_filepath",
         "sound_failure_filepath",
-        "previews_output_dir",
     )
     def path_must_exist(cls, v: Path, info: FieldValidationInfo) -> Path:
         """
@@ -243,8 +230,10 @@ class Settings(BaseModel):
                 )
         return v.resolve()
 
-    @field_validator("remote_upload_dir")
-    def remote_upload_dir_must_be_valid_path(cls, v: Path, info: FieldValidationInfo) -> Path:
+    @field_validator("rclone_remote_upload_dir")
+    def rclone_remote_upload_dir_must_be_valid_path(
+        cls, v: Path, info: FieldValidationInfo
+    ) -> Path:
         """
         Ensures remote upload dir is a syntactically valid path when using rclone.
         Does NOT check if the path exists (since it's a remote target).
@@ -253,7 +242,7 @@ class Settings(BaseModel):
             try:
                 _ = str(v)  # forces path parsing
             except Exception:
-                raise ValueError(f"'remote_upload_dir' is not a valid path string: {v}")
+                raise ValueError(f"'rclone_remote_upload_dir' is not a valid path string: {v}")
         return v
 
     @field_validator("rclone_remote_service")
@@ -325,3 +314,16 @@ class Settings(BaseModel):
                 "Please specify at least one planet for preview generation."
             )
         return v
+
+    @field_validator("local_sync_target_dir")
+    def check_local_sync_target_dir(cls, v: Path, info: FieldValidationInfo) -> Path:
+        """
+        Ensures local sync directory is valid if 'local_sync' is selected.
+        """
+        if info.data.get("upload_method") == "local_sync":
+            if not v.exists():
+                raise ValueError(
+                    f"The local sync target directory does not exist:\n  {v}\n"
+                    f"Please create it or adjust your 'local_sync_target_dir' setting."
+                )
+        return v.resolve()
