@@ -24,7 +24,7 @@ build/
 
 # Ignore all of third_party, but keep .gitkeep files
 third_party/*
-!third_party/**/.gitkeep
+!third_party/rclone
 
 # Ignore specific root files
 map_string.txt
