@@ -3,9 +3,9 @@ from pathlib import Path
 
 from src.FactorioPreviewToolkit.preview_generator.factorio_interface import run_factorio_command
 from src.FactorioPreviewToolkit.shared.config import Config
-from src.FactorioPreviewToolkit.shared.shared_constants import Constants
 from src.FactorioPreviewToolkit.shared.shared_constants import constants
 from src.FactorioPreviewToolkit.shared.structured_logger import log, log_section
+from src.FactorioPreviewToolkit.shared.utils import write_js_variable
 
 
 def _log_seed_from_map_gen_settings(settings_path: Path) -> int:
@@ -38,20 +38,19 @@ def _load_supported_planets(path: Path) -> list[str]:
                 if not isinstance(planets, list) or not all(isinstance(p, str) for p in planets):
                     raise ValueError
         except Exception:
-            log.error("❌ Failed to load or parse planet names JSON.")
+            log.error("❌ Failed to load or parse planet names.")
             raise
 
         log.info(f"✅ Found {len(planets)} planets: {', '.join(planets)}")
         return planets
 
 
-def write_planet_list_to_output(planets: list[str]) -> None:
+def write_planet_names_list_to_output(planets: list[str]) -> None:
     """
-    Writes the list of supported planets to the preview output directory.
+    Writes the list of supported planets as a JS file to the preview output directory.
     """
-    output_file = Constants.PLANET_NAMES_OUTPUT_FILEPATH
-    with output_file.open("w", encoding="utf-8") as f:
-        json.dump(planets, f, indent=2)
+    output_file = constants.PLANET_NAMES_VIEWER_FILEPATH
+    write_js_variable(output_file, "planetNames", planets)
     log.info(f"📋 Planet list written to: {output_file}")
 
 
@@ -76,7 +75,7 @@ def _generate_preview_image(
     """
     Generates a single map preview image for the given planet using the Factorio CLI.
     """
-    output = Constants.PREVIEWS_OUTPUT_DIR / f"{planet}.png"
+    output = constants.PREVIEWS_OUTPUT_DIR / f"{planet}.png"
 
     args = [
         f"--generate-map-preview={output}",
@@ -96,10 +95,11 @@ def run_full_preview_generation(factorio_base_path: Path) -> None:
     with log_section("🌍 Starting map preview generation..."):
         settings_path = Path(constants.MAP_GEN_SETTINGS_FILEPATH)
         _log_seed_from_map_gen_settings(settings_path)
-        preview_width = Config.get().map_preview_size
-        planet_names = _load_supported_planets(constants.PLANET_NAMES_GENERATION_FILEPATH)
 
-        write_planet_list_to_output(planet_names)
+        planet_names = _load_supported_planets(constants.PLANET_NAMES_GENERATION_FILEPATH)
+        write_planet_names_list_to_output(planet_names)
+
+        preview_width = Config.get().map_preview_size
         generate_all_planet_previews(factorio_base_path, settings_path, preview_width, planet_names)
 
         log.info("✅ All planet previews generated successfully.")

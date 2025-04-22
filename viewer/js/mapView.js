@@ -1,11 +1,11 @@
-const baseZoomFactor = 1.1;
+const baseZoomFactor = 1.14;
 const statePerPlanet = {};
 let currentPlanet = null;
 let zoomStepIndex = 0;
 let scale = 1, offsetX = 0, offsetY = 0;
 
-function setupTabs(config, tabContainer, mapImage) {
-  Object.entries(config).forEach(([planet, url], index) => {
+function setupTabs(previewSources, tabContainer, mapImage) {
+  Object.entries(previewSources).forEach(([planet, url], index) => {
     const tab = document.createElement("div");
     tab.className = "tab";
     tab.dataset.planet = planet;
@@ -18,28 +18,23 @@ function setupTabs(config, tabContainer, mapImage) {
       mapImage.onerror = () => console.error("Failed to load map image:", mapImage.src);
     }
 
-    tab.addEventListener("click", () => switchPlanet(planet, config, mapImage));
+    tab.addEventListener("click", () => switchPlanet(planet, previewSources, mapImage));
     tabContainer.appendChild(tab);
   });
 }
 
-function switchPlanet(planet, config, mapImage) {
+function switchPlanet(planet, previewSources, mapImage) {
   if (currentPlanet) {
     statePerPlanet[currentPlanet] = { zoomStepIndex, offsetX, offsetY };
   }
 
   document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
-  document.querySelector(`.tab[data-planet="${planet}"]`).classList.add("active");
+  const newTab = document.querySelector(`.tab[data-planet="${planet}"]`);
+  if (newTab) newTab.classList.add("active");
 
   currentPlanet = planet;
-  mapImage.src = config[planet];
+  mapImage.src = previewSources[planet];
   mapImage.onerror = () => console.error("Failed to load map image:", mapImage.src);
-}
-
-function setInitialPlanet(mapImage) {
-  if (currentPlanet && planetConfig[currentPlanet]) {
-    mapImage.src = planetConfig[currentPlanet];
-  }
 }
 
 function handleImageLoad(mapImage, container, zoomDisplay) {

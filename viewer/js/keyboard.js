@@ -15,6 +15,10 @@ function initKeyboardControls(mapImage, mapContainer, zoomDisplay) {
     handleWheelZoom(e, mapImage, mapContainer, zoomDisplay);
   });
 
+  mapContainer.addEventListener("dblclick", () => {
+    resetMapView(mapImage, mapContainer, zoomDisplay);
+  });
+
   mapContainer.addEventListener("mousedown", e => {
     if (e.button !== 0) return;
     isDragging = true;

@@ -1,9 +1,10 @@
-import json
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import cast
 
-from src.FactorioPreviewToolkit.shared.shared_constants import Constants
+from src.FactorioPreviewToolkit.shared.shared_constants import constants
 from src.FactorioPreviewToolkit.shared.structured_logger import log, log_section
+from src.FactorioPreviewToolkit.shared.utils import read_js_variable
 
 
 def _write_links_file(planet_links: dict[str, str]) -> None:
@@ -11,7 +12,7 @@ def _write_links_file(planet_links: dict[str, str]) -> None:
     Writes a JavaScript config object with links to each uploaded image, one per planet.
     """
     with log_section("📝 Saving download links to file..."):
-        preview_links_filepath = Constants.PREVIEW_LINKS_FILEPATH
+        preview_links_filepath = constants.PREVIEW_LINKS_FILEPATH
         try:
             with preview_links_filepath.open("w", encoding="utf-8") as f:
                 f.write("const planetConfig = {\n")
@@ -26,19 +27,16 @@ def _write_links_file(planet_links: dict[str, str]) -> None:
 
 def _load_planet_names() -> list[str]:
     """
-    Loads the list of planet names from the JSON file generated during preview setup.
+    Loads the list of planet names from the JS file generated during preview setup.
     """
-    planet_file = Constants.PLANET_NAMES_OUTPUT_FILEPATH
+    planet_file = constants.PLANET_NAMES_VIEWER_FILEPATH
     with log_section("📄 Loading planet names..."):
         try:
-            with planet_file.open("r", encoding="utf-8") as f:
-                planets = json.load(f)
-            if not isinstance(planets, list) or not all(isinstance(p, str) for p in planets):
-                raise ValueError("Invalid format in planet list JSON.")
+            planets = cast(list[str], read_js_variable(planet_file, "planetNames"))
             log.info(f"✅ Loaded {len(planets)} planets: {', '.join(planets)}")
             return planets
         except Exception:
-            log.error("❌ Failed to load or parse planet names file.")
+            log.error("❌ Failed to load or parse planet names JS file.")
             raise
 
 
@@ -67,7 +65,8 @@ class BaseUploader(ABC):
         with log_section("📤 Uploading planet names file..."):
             try:
                 self.upload_single(
-                    Constants.PLANET_NAMES_OUTPUT_FILEPATH, Constants.PLANET_NAMES_FILENAME
+                    constants.PLANET_NAMES_VIEWER_FILEPATH,
+                    constants.PLANET_NAMES_GENERATION_FILENAME,
                 )
                 log.info("✅ Planet names uploaded.")
             except Exception:
@@ -82,7 +81,7 @@ class BaseUploader(ABC):
 
         for planet in planet_names:
             with log_section(f"🌍 Uploading {planet} preview..."):
-                image_path = Constants.PREVIEWS_OUTPUT_DIR / f"{planet}.png"
+                image_path = constants.PREVIEWS_OUTPUT_DIR / f"{planet}.png"
                 try:
                     url = self.upload_single(image_path, f"{planet}.png")
                     links[planet] = url
