@@ -30,15 +30,16 @@ class Constants:
     MAP_GEN_SETTINGS_FILEPATH = BASE_TEMP_DIR / "map-gen-settings.json"
 
     # === Dummy Save for Settings Generation ===
-    DUMMY_SAVE_TO_CREATE_MAP_GEN_SETTINGS_PATH = (
-        BASE_TEMP_DIR / "dummy-save-to-create-map-gen-settings"
-    )
-    CONTROL_LUA_FILEPATH = DUMMY_SAVE_TO_CREATE_MAP_GEN_SETTINGS_PATH / "control.lua"
+    DUMMY_SAVE_TO_EXECUTE_LUA_CODE_PATH = BASE_TEMP_DIR / "dummy-save-to-create-map-gen-settings"
+    CONTROL_LUA_FILEPATH = DUMMY_SAVE_TO_EXECUTE_LUA_CODE_PATH / "control.lua"
 
     # === File Naming & Generated Outputs ===
     LINK_OUTPUT_FILENAME = "preview_links.txt"
     COMBINED_MAP_GEN_SETTINGS_FILENAME = "combined-map-gen-settings.json"
     COMBINED_MAP_GEN_SETTINGS_FILEPATH = SCRIPT_OUTPUT_DIR / COMBINED_MAP_GEN_SETTINGS_FILENAME
+    PLANET_NAMES_FILENAME = "planet-names.json"
+    PLANET_NAMES_GENERATION_FILEPATH = SCRIPT_OUTPUT_DIR / PLANET_NAMES_FILENAME
+    PLANET_NAMES_OUTPUT_FILEPATH = PREVIEWS_OUTPUT_DIR / PLANET_NAMES_FILENAME
     FACTORIO_LOCK_FILEPATH = FACTORIO_WRITE_DATA_DIR / ".lock"
 
     # === Ensure required directories exist ===

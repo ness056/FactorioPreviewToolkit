@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import sys
 import time
@@ -7,6 +8,23 @@ from typing import Any
 
 from src.FactorioPreviewToolkit.shared.shared_constants import constants
 from src.FactorioPreviewToolkit.shared.structured_logger import log
+
+
+def get_factorio_version(factorio_path: Path) -> tuple[int, int]:
+    """
+    Detects the major and minor Factorio version from CLI output.
+    Returns (major, minor) as integers.
+    """
+    try:
+        result = subprocess.run(
+            [str(factorio_path), "--version"], capture_output=True, text=True, check=True
+        )
+        match = re.search(r"Version:\s+(\d+)\.(\d+)", result.stdout)
+        if match:
+            return int(match.group(1)), int(match.group(2))
+    except Exception as e:
+        log.error(f"⚠️ Failed to detect Factorio version: {e}")
+    return (0, 0)  # Default fallback
 
 
 def wait_for_factorio_lock_to_release(timeout_in_sec: int = 30) -> bool:
@@ -26,10 +44,24 @@ def wait_for_factorio_lock_to_release(timeout_in_sec: int = 30) -> bool:
     return True
 
 
+def remove_map_preview_planet_arg(args: list[str]) -> None:
+    """
+    Removes '--map-preview-planet=...' in-place if Factorio version is 1.x.
+    """
+    for idx, arg in enumerate(args):
+        if arg.startswith("--map-preview-planet="):
+            log.info("⛔ Stripping '--map-preview-planet=...' (unsupported in Factorio 1.1)")
+            del args[idx]
+
+
 def _build_factorio_command(executable_path: Path, args: list[str], config_path: Path) -> list[str]:
     """
     Builds the full Factorio CLI command with resolved paths and config file.
     """
+    # Remove unsupported CLI args if needed
+    if get_factorio_version(executable_path)[0] <= 1:
+        remove_map_preview_planet_arg(args)
+
     resolved_args = [str(Path(arg).resolve()) if not arg.startswith("--") else arg for arg in args]
     return [str(executable_path), "--config", str(config_path)] + resolved_args
 
@@ -62,7 +94,7 @@ def run_factorio_command(factorio_executable_path: Path, args: list[str]) -> Non
     Runs Factorio with the given args and config, with low-priority CPU settings.
     """
     config_path = constants.FACTORIO_CONFIG_PATH
-    log.info(f"Using config file: {config_path}")
+    log.info(f"⚙️ Using config file: {config_path}")
 
     try:
         wait_for_factorio_lock_to_release()

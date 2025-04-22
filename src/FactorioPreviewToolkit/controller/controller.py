@@ -9,6 +9,7 @@ from src.FactorioPreviewToolkit.map_string_provider.base import MapStringProvide
 from src.FactorioPreviewToolkit.map_string_provider.factory import get_map_string_provider
 from src.FactorioPreviewToolkit.shared.structured_logger import log
 from src.FactorioPreviewToolkit.shared.structured_logger import log_section
+from src.FactorioPreviewToolkit.shared.utils import sanitize_map_string
 
 
 class PreviewController:
@@ -50,7 +51,7 @@ class PreviewController:
                 match event_type:
                     case "map_string":
                         assert isinstance(data, str)
-                        self._latest_map_string = data
+                        self._latest_map_string = sanitize_map_string(data)
                         self._map_string_analysed = False
                         log.info(f"✅ Updated map exchange string: {self._latest_map_string}")
 

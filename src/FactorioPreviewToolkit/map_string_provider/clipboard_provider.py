@@ -24,7 +24,7 @@ class ClipboardMapStringProvider(MapStringProvider):
         Sets up the clipboard monitor and polling interval.
         """
         super().__init__(on_new_map_string)
-        self._poll_interval = Config.get().factorio_locator_poll_interval_in_seconds
+        self._poll_interval = Config.get().map_exchange_input_poll_interval_in_seconds
         self._last_map_string = ""
         self._stop_flag = threading.Event()
         self._thread = threading.Thread(

@@ -12,14 +12,12 @@ from typing import Sequence
 
 from pydantic import BaseModel, field_validator
 
-from src.FactorioPreviewToolkit.preview_generator.exchange_string_to_settings import (
-    convert_exchange_string_to_settings,
+from src.FactorioPreviewToolkit.preview_generator.preview_generation import (
+    run_full_preview_generation,
 )
-from src.FactorioPreviewToolkit.preview_generator.settings_to_map_previews import (
-    generate_previews_from_settings,
+from src.FactorioPreviewToolkit.preview_generator.preview_generation_setup import (
+    run_preview_setup_pipeline,
 )
-from src.FactorioPreviewToolkit.shared.config import Config
-from src.FactorioPreviewToolkit.shared.shared_constants import Constants
 from src.FactorioPreviewToolkit.shared.structured_logger import log, log_section
 from src.FactorioPreviewToolkit.shared.utils import is_valid_map_string
 
@@ -70,22 +68,6 @@ def parse_arguments(argv: Sequence[str] | None = None) -> Args:
     return Args(**vars(args))
 
 
-def remove_unused_planet_images() -> None:
-    """
-    Removes .png files from the preview output folder that do not match any planet from the config.
-    """
-    config = Config.get()
-    allowed_names = {f"{planet}.png" for planet in config.planet_names}
-    preview_folder = Constants.PREVIEWS_OUTPUT_DIR
-    for file in preview_folder.glob("*.png"):
-        if file.name not in allowed_names:
-            try:
-                file.unlink()
-                log.info(f"🗑️ Removed unused preview: {file.name}")
-            except Exception as e:
-                log.warning(f"⚠️ Could not delete {file.name}: {e}")
-
-
 def main(argv: Sequence[str] | None = None) -> None:
     """
     Runs the full preview generation pipeline from CLI arguments.
@@ -93,9 +75,8 @@ def main(argv: Sequence[str] | None = None) -> None:
     try:
         with log_section("🚀 Preview Generator started. Processing map string..."):
             arguments = parse_arguments(argv)
-            convert_exchange_string_to_settings(arguments.factorio_path, arguments.map_string)
-            generate_previews_from_settings(arguments.factorio_path)
-            remove_unused_planet_images()
+            run_preview_setup_pipeline(arguments.factorio_path, arguments.map_string)
+            run_full_preview_generation(arguments.factorio_path)
             log.info("✅ Preview Generator completed successfully.")
     except Exception:
         log.exception("❌ Preview Generator failed with an exception.")

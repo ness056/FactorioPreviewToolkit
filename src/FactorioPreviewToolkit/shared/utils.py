@@ -9,7 +9,16 @@ def is_valid_map_string(s: str) -> bool:
     """
     Checks if the string matches the map exchange format: >>>eN...<<<
     """
-    return bool(re.match(r"^>>>eN[a-zA-Z0-9+/=]+<<<$", s.strip()))
+    return bool(re.match(r"^>>>eN[\sA-Za-z0-9+/=]+<<<$", s.strip()))
+
+
+def sanitize_map_string(raw: str) -> str | None:
+    """
+    Strips all whitespace from the raw input and returns the cleaned map string
+    if it's a valid Factorio map exchange string.
+    """
+    cleaned = re.sub(r"\s+", "", raw)
+    return cleaned if is_valid_map_string(cleaned) else None
 
 
 def get_project_root() -> Path:
