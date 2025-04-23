@@ -7,21 +7,27 @@ from src.FactorioPreviewToolkit.shared.structured_logger import log, log_section
 from src.FactorioPreviewToolkit.shared.utils import read_js_variable
 
 
-def _write_links_file(planet_links: dict[str, str]) -> None:
+def write_viewer_config_js(planet_image_links: dict[str, str], planet_names_link: str) -> None:
     """
-    Writes a JavaScript config object with links to each uploaded image, one per planet.
+    Writes a JavaScript file that defines the viewerConfig object.
+    This includes preview image URLs and a reference to the planet names JS file.
     """
-    with log_section("📝 Saving download links to file..."):
-        preview_links_filepath = constants.PREVIEW_LINKS_FILEPATH
+    from src.FactorioPreviewToolkit.shared.shared_constants import constants
+
+    output_path = constants.PREVIEW_LINKS_FILEPATH
+    with log_section("📝 Writing viewerConfig.js..."):
         try:
-            with preview_links_filepath.open("w", encoding="utf-8") as f:
-                f.write("const planetConfig = {\n")
-                for planet, url in planet_links.items():
-                    f.write(f'  {planet}: "{url}",\n')
+            with output_path.open("w", encoding="utf-8") as f:
+                f.write("const viewerConfig = {\n")
+                f.write("  planetPreviewSources: {\n")
+                for planet, url in planet_image_links.items():
+                    f.write(f'    {planet}: "{url}",\n')
+                f.write("  },\n")
+                f.write(f'  planetNamesSource: "{planet_names_link}"\n')
                 f.write("};\n")
-            log.info(f"✅ Download links saved to: {preview_links_filepath}")
+            log.info(f"✅ viewerConfig.js written to: {output_path}")
         except Exception:
-            log.error(f"❌ Failed to write output file: {preview_links_filepath}")
+            log.error(f"❌ Failed to write viewerConfig.js to: {output_path}")
             raise
 
 
@@ -53,22 +59,23 @@ class BaseUploader(ABC):
         """
         with log_section("🚀 Uploading preview assets..."):
             planet_names = _load_planet_names()
-            self._upload_planet_names_file()
-            planet_links = self._upload_planet_images(planet_names)
-            _write_links_file(planet_links)
+            planet_names_link = self._upload_planet_names_file()
+            planet_image_links = self._upload_planet_images(planet_names)
+            write_viewer_config_js(planet_image_links, planet_names_link)
             log.info("✅ All assets uploaded successfully.")
 
-    def _upload_planet_names_file(self) -> None:
+    def _upload_planet_names_file(self) -> str:
         """
-        Uploads the planet names JSON file itself.
+        Uploads the planet names JS file and returns its public URL.
         """
         with log_section("📤 Uploading planet names file..."):
             try:
-                self.upload_single(
+                url = self.upload_single(
                     constants.PLANET_NAMES_VIEWER_FILEPATH,
                     constants.PLANET_NAMES_GENERATION_FILENAME,
                 )
                 log.info("✅ Planet names uploaded.")
+                return url
             except Exception:
                 log.error("❌ Failed to upload planet names.")
                 raise

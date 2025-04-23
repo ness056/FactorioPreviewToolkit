@@ -21,7 +21,7 @@ class _Constants:
 
     # === Output Folder for Generated Previews ===
     PREVIEWS_OUTPUT_DIR = BASE_PROJECT_DIR / "previews"
-    PREVIEW_LINKS_FILEPATH = PREVIEWS_OUTPUT_DIR / "remote_preview_links.txt"
+    PREVIEW_LINKS_FILEPATH = PREVIEWS_OUTPUT_DIR / "remote_viewer_config.txt"
     PLANET_NAMES_VIEWER_FILENAME = "planet_names.js"
     PLANET_NAMES_VIEWER_FILEPATH = PREVIEWS_OUTPUT_DIR / PLANET_NAMES_VIEWER_FILENAME
 
