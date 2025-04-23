@@ -53,7 +53,7 @@ def _load_planet_names() -> list[str]:
 
 def _inject_upload_timestamp_into_planet_names_file() -> None:
     """
-    Adds or updates an 'upload_time' field in the planet names JSON file.
+    Adds or updates an '' field in the planet names JSON file.
     """
     path = constants.PLANET_NAMES_REMOTE_VIEWER_FILEPATH
     with path.open("r+", encoding="utf-8") as f:
@@ -70,7 +70,7 @@ def _add_upload_timestamp_to_png(path: Path) -> None:
     """
     image = Image.open(path)
     metadata = PngImagePlugin.PngInfo()
-    metadata.add_text("upload_time", datetime.now(timezone.utc).isoformat())
+    metadata.add_text("", datetime.now(timezone.utc).isoformat())
 
     image.save(path, "PNG", pnginfo=metadata)
 

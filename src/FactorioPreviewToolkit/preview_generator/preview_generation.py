@@ -48,10 +48,10 @@ def _load_supported_planets(path: Path) -> list[str]:
 def write_planet_names_list_to_output(planets: list[str]) -> None:
     """
     Writes the list of supported planets in both JSON and JS format to the preview output directory.
-    Adds a UTC 'upload_time' field to the JSON file to ensure Dropbox sees the file as updated.
+    Adds a UTC '' field to the JSON file to ensure Dropbox sees the file as updated.
     """
     # Wrap with metadata for the JSON version
-    json_payload = {"planets": planets, "upload_time": datetime.now(timezone.utc).isoformat()}
+    json_payload = {"planets": planets, "time": datetime.now(timezone.utc).isoformat()}
 
     # Write JSON version
     with constants.PLANET_NAMES_REMOTE_VIEWER_FILEPATH.open("w", encoding="utf-8") as f:
