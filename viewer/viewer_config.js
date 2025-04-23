@@ -6,5 +6,5 @@ const viewerConfig  = {
     fulgora: "../previews/fulgora.png",
     aquilo: "../previews/aquilo.png"
   },
-  planetNamesSource: "../previews/planet_names.js"
+  planetNamesSource: "../previews/local_planet_names.js"
 };
