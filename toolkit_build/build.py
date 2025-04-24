@@ -52,7 +52,7 @@ def run_pyinstaller(version: str) -> None:
     """
     Builds the standalone executable using PyInstaller.
     """
-    print("📦 Building with PyInstaller...")
+    print("Building with PyInstaller...")
     subprocess.run(
         [
             "pyinstaller",
@@ -76,7 +76,7 @@ def copy_runtime_files() -> None:
     Copies runtime assets (e.g. config.ini, assets folder) into the build output directory.
     Also creates an empty previews/ folder.
     """
-    print("📁 Copying assets and config files...")
+    print("Copying assets and config files...")
 
     # Copy config.ini
     config_src = PROJECT_ROOT / "config.ini"
@@ -131,10 +131,10 @@ def copy_rclone_binary_for_current_platform() -> None:
     dest_root = DIST_DIR / "third_party" / "rclone" / platform_dir
 
     if not source_root.exists():
-        print(f"⚠️  Rclone binary folder not found for current platform: {source_root}")
+        print(f"Rclone binary folder not found for current platform: {source_root}")
         return
 
-    print(f"📁 Copying rclone binary from {source_root} → {dest_root}")
+    print(f"Copying rclone binary from {source_root} → {dest_root}")
     shutil.copytree(source_root, dest_root, dirs_exist_ok=True)
 
 
@@ -145,7 +145,7 @@ def print_result(version: str) -> None:
     exe = DIST_DIR / f"{EXECUTABLE_NAME}-v{version}"
     if sys.platform == "win32":
         exe = exe.with_suffix(".exe")
-    print(f"✅ Build complete: {exe}")
+    print(f"Build complete: {exe}")
     print("You can now distribute this executable.")
 
 

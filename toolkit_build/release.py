@@ -48,7 +48,7 @@ def main() -> None:
 
     # Step 2: Bump patch version
     version = bump_patch_version()
-    print(f"🔢 Bumped to version v{version}")
+    print(f"Bumped to version v{version}")
 
     # Step 3: Git commit + tag
     tag = f"v{version}"
@@ -58,7 +58,7 @@ def main() -> None:
     subprocess.run(["git", "push"], check=True)
     subprocess.run(["git", "push", "origin", tag], check=True)
 
-    print(f"\n✅ Release {tag} pushed. GitHub Actions will now build and publish.\n")
+    print(f"\nRelease {tag} pushed. GitHub Actions will now build and publish.\n")
 
 
 if __name__ == "__main__":
