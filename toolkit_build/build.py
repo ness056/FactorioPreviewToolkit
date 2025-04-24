@@ -41,7 +41,7 @@ def clean_old_builds() -> None:
     """
     Deletes old build artifacts including dist/, __pyinstaller__/, and .spec files.
     """
-    print("🧹 Cleaning previous build artifacts...")
+    print("Cleaning previous build artifacts...")
     shutil.rmtree(DIST_ROOT, ignore_errors=True)
     shutil.rmtree(BUILD_DIR, ignore_errors=True)
     for spec in PROJECT_ROOT.glob("*.spec"):
