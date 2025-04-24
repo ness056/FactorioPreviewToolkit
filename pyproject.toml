@@ -14,7 +14,8 @@ dependencies = [
     "pydantic_core==2.33.1",
     "pygame==2.6.1",
     "pyperclip==1.9.0",
-    "pywin32==310",
+    'pywin32==310; sys_platform == "win32"',
+    'pyobjc==10.2; sys_platform == "darwin"',
 ]
 
 [project.optional-dependencies]
@@ -23,6 +24,7 @@ dev = [
     "mypy",
     "types-psutil",
     "types-pyperclip",
+    "types-Pillow",
     "pyinstaller",
     "pre-commit",
     "pydantic[mypy]",
@@ -41,9 +43,14 @@ target-version = [
 skip-string-normalization = false
 
 [tool.mypy]
-plugins = [
-    "pydantic.mypy",
-]
+python_version = "3.10"
+strict = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+warn_unused_ignores = true
+exclude = "^(tests/|build/)"
+show_error_codes = true
+plugins = ["pydantic.mypy"]
 
 [tool.setuptools.package-dir]
 "" = "src"

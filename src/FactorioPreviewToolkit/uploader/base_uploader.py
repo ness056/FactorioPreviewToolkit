@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import cast
 
 from PIL import PngImagePlugin, Image
+from PIL.Image import ADAPTIVE
 
 from src.FactorioPreviewToolkit.shared.shared_constants import constants
 from src.FactorioPreviewToolkit.shared.structured_logger import log, log_section
@@ -81,7 +82,7 @@ def _optimize_png(path: Path) -> None:
     """
     with Image.open(path) as img:
         if img.mode != "P":
-            img = img.convert("P", palette=Image.ADAPTIVE, colors=256)
+            img = img.convert("P", palette=ADAPTIVE, colors=256)
         img.save(path, optimize=True, compress_level=9)
 
 
