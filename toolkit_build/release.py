@@ -1,5 +1,5 @@
 """
-- Use via 'python -m build.release'
+- Use via 'python -m toolkit_build.release'
 
 Triggers a full release:
 - Bumps patch version in pyproject.toml
@@ -16,7 +16,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from build.version import bump_patch_version
+from toolkit_build.version import bump_patch_version
 
 
 def get_new_version(pyproject: Path) -> str:
@@ -43,7 +43,7 @@ def main() -> None:
     print(f"🔢 Bumped to version v{version}")
 
     # Step 2: Build
-    subprocess.run([sys.executable, "-m", "build.build"], check=True)
+    subprocess.run([sys.executable, "-m", "toolkit_build.build"], check=True)
 
     # Step 3: Git commit + tag
     tag = f"v{version}"

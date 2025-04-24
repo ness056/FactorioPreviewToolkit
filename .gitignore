@@ -13,8 +13,8 @@ output_links.txt
 logs/
 
 # Ignore most of the build and dist folders, except for build scripts
-build/__pyinstaller__/
-build/dist/
+toolkit_build/__pyinstaller__/
+toolkit_build/dist/
 
 dist/
 *.spec

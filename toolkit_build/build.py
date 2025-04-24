@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from platform import system
 
-from build.version import get_version
+from toolkit_build.version import get_version
 
 
 def get_platform_name() -> str:
