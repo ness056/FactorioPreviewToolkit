@@ -7,10 +7,16 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - runner: windows-latest
+            platform: windows
+          - runner: ubuntu-latest
+            platform: linux
+          - runner: macos-latest
+            platform: macOS
 
     steps:
       - name: 📥 Checkout repository
@@ -40,6 +46,6 @@ jobs:
       - name: 🚀 Upload to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: toolkit_build/dist/factorio-preview-toolkit-${{ matrix.os }}-v*.zip
+          files: toolkit_build/dist/${{ matrix.platform }}/factorio-preview-toolkit-v*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
