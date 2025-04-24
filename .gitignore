@@ -6,23 +6,24 @@
 temp_files/
 
 # Map preview images and links (output)
-previews/*
+previews/
 output_links.txt
 
 # Logs
 logs/
 
-# Viewer config and build artifacts
-viewer/viewer-config.js
-dist/
+# Ignore most of the build and dist folders, except for build scripts
 build/
+!build/*.py
+
+dist/
 *.spec
 
 # Compiled/minified frontend assets
 *.min.js
 *.min.css
 
-# Ignore all of third_party, but keep .gitkeep files
+# Ignore all of third_party, but keep rclone binaries
 third_party/*
 !third_party/rclone
 

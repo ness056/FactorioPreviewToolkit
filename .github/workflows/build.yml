@@ -1,0 +1,44 @@
+name: Build Executables
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: 💾 Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: 📦 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[dev] pyinstaller
+
+      - name: 🏗️ Build with PyInstaller
+        run: python build/build.py
+
+      - name: 📤 Upload zip artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: factorio-preview-toolkit-${{ matrix.os }}
+          path: build/dist/factorio-preview-toolkit-${{ matrix.os }}-v*.zip
