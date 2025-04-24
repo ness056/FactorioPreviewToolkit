@@ -157,7 +157,7 @@ def zip_build_output(version: str) -> None:
     platform_name = get_platform_name()
     zip_name = f"factorio-preview-toolkit-{platform_name}-v{version}"
     zip_target = DIST_ROOT / zip_name
-    print(f"🗜️  Creating ZIP archive: {zip_target}.zip")
+    print(f"Creating ZIP archive: {zip_target}.zip")
     shutil.make_archive(str(zip_target), "zip", root_dir=DIST_DIR)
 
 
