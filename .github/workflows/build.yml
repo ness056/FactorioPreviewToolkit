@@ -37,9 +37,9 @@ jobs:
       - name: 🏗️ Build with PyInstaller
         run: python -m toolkit_build.build
 
-      - name: 📤 Upload zip artifact
-        uses: actions/upload-artifact@v4
+      - name: 🚀 Upload to GitHub Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: factorio-preview-toolkit-${{ matrix.os }}
-          path: |
-            toolkit_build/dist/factorio-preview-toolkit-${{ matrix.os }}-v*.zip
+          files: toolkit_build/dist/factorio-preview-toolkit-${{ matrix.os }}-v*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
