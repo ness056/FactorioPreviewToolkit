@@ -35,7 +35,7 @@ jobs:
           pip install .[dev] pyinstaller
 
       - name: 🏗️ Build with PyInstaller
-        run: python toolkit_build/build.py
+        run: python -m toolkit_build.build
 
       - name: 📤 Upload zip artifact
         uses: actions/upload-artifact@v4
