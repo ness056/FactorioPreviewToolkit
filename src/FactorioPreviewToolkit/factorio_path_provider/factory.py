@@ -39,9 +39,9 @@ def get_factorio_path_provider(
                 system = platform.system()
                 if system == "Windows":
                     return WindowsActiveWindowProvider(on_new_factorio_path)
-                elif system == "Darwin":  # TODO: AntiElitz
+                elif system == "Darwin":
                     return MacActiveWindowProvider(on_new_factorio_path)
-                elif system == "Linux":  # TODO: AntiElitz
+                elif system == "Linux":
                     return LinuxActiveWindowProvider(on_new_factorio_path)
                 else:
                     raise ValueError(f"❌ Unsupported platform: {system}")
