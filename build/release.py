@@ -1,5 +1,5 @@
 """
-- Use via python build/release.py
+- Use via 'python -m build.release'
 
 Triggers a full release:
 - Bumps patch version in pyproject.toml
@@ -13,6 +13,7 @@ This automatically triggers the GitHub Actions build + upload.
 
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 from build.version import bump_patch_version
@@ -42,7 +43,7 @@ def main() -> None:
     print(f"🔢 Bumped to version v{version}")
 
     # Step 2: Build
-    subprocess.run(["python", "build/build.py"], check=True)
+    subprocess.run([sys.executable, "-m", "build.build"], check=True)
 
     # Step 3: Git commit + tag
     tag = f"v{version}"
