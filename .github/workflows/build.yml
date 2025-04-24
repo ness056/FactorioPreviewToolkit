@@ -46,6 +46,6 @@ jobs:
       - name: 🚀 Upload to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: toolkit_build/dist/${{ matrix.platform }}/factorio-preview-toolkit-v*.zip
+          files: toolkit_build/dist/factorio-preview-toolkit-*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
