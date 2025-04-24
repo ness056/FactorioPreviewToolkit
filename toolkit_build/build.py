@@ -134,7 +134,7 @@ def copy_rclone_binary_for_current_platform() -> None:
         print(f"Rclone binary folder not found for current platform: {source_root}")
         return
 
-    print(f"Copying rclone binary from {source_root} → {dest_root}")
+    print(f"Copying rclone binary from {source_root} -> {dest_root}")
     shutil.copytree(source_root, dest_root, dirs_exist_ok=True)
 
 
