@@ -13,8 +13,8 @@ output_links.txt
 logs/
 
 # Ignore most of the build and dist folders, except for build scripts
-build/
-!build/*.py
+build/__pyinstaller__/
+build/dist/
 
 dist/
 *.spec
@@ -52,8 +52,6 @@ ENV/
 *.egg-info/
 .eggs/
 develop-eggs/
-build/
-dist/
 downloads/
 sdist/
 wheels/
