@@ -30,7 +30,7 @@ def get_platform_name() -> str:
 # Project paths
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_MAIN = PROJECT_ROOT / "src" / "FactorioPreviewToolkit" / "__main__.py"
-BUILD_ROOT = PROJECT_ROOT / "build"
+BUILD_ROOT = PROJECT_ROOT / "toolkit_build"
 DIST_ROOT = BUILD_ROOT / "dist"
 DIST_DIR = DIST_ROOT / get_platform_name()
 BUILD_DIR = BUILD_ROOT / "__pyinstaller__"
@@ -152,7 +152,7 @@ def print_result(version: str) -> None:
 def zip_build_output(version: str) -> None:
     """
     Zips the entire build output folder into a versioned archive.
-    Example: build/dist/factorio-preview-toolkit-windows-v0.1.32.zip
+    Example: toolkit_build/dist/factorio-preview-toolkit-windows-v0.1.32.zip
     """
     platform_name = get_platform_name()
     zip_name = f"factorio-preview-toolkit-{platform_name}-v{version}"

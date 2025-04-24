@@ -42,4 +42,4 @@ jobs:
         with:
           name: factorio-preview-toolkit-${{ matrix.os }}
           path: |
-            build/dist/factorio-preview-toolkit-${{ matrix.os }}-v*.zip
+            toolkit_build/dist/factorio-preview-toolkit-${{ matrix.os }}-v*.zip
