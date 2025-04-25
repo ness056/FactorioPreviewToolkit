@@ -30,7 +30,26 @@ Install everything needed for development, testing, and building:
 pip install .[dev]
 ```
 
-If you're on Linux or macOS and using GUI features (like tkinter), you may need to manually install additional system packages (e.g. `sudo apt install python3-tk` on Debian/Ubuntu).
+If you're on **Linux** and want to use GUI features (like tkinter popups), you may also need to install `tkinter` manually:
+
+- On **Debian/Ubuntu**:
+  ```bash
+  sudo apt install python3-tk
+  ```
+- On **Arch Linux**:
+  ```bash
+  sudo pacman -S tk
+  ```
+- On **Fedora / RHEL / CentOS**:
+  ```bash
+  sudo dnf install python3-tkinter
+  ```
+- On **openSUSE**:
+  ```bash
+  sudo zypper install python3-tk
+  ```
+
+
 
 ---
 
@@ -46,17 +65,6 @@ This ensures Python locates the main module correctly inside the `src` directory
 
 ---
 
-## 🛠️ Building a Standalone Executable
-
-You can generate a one-file executable using PyInstaller by running:
-
-```bash
-python -m toolkit_build.build
-```
-
-This creates a zipped bundle with platform-specific binaries, configurations, and a viewer UI, ready to distribute.
-
-
 ## 🧪 Formatting, Linting, and Type Checking
 
 This project uses:
@@ -71,6 +79,23 @@ This project uses:
 pre-commit install
 ```
 
+### Run `black` Manually
+
+Auto-format your code with:
+
+```bash
+black .
+```
+
+
+### Run `mypy` in Strict Mode
+
+This project uses `mypy` in strict mode for full static type checking:
+
+```bash
+mypy --strict .
+```
+
 ### Run all checks manually:
 
 ```bash
@@ -79,17 +104,17 @@ pre-commit run --all-files
 
 ---
 
-## 🏗️ Project Structure
+## 🛠️ Building a Standalone Executable
 
+You can generate a one-file executable using PyInstaller by running:
+
+```bash
+python -m toolkit_build.build
 ```
-toolkit_build/               → Build and release logic (zip, PyInstaller, tag push)
-src/FactorioPreviewToolkit/  → Main application logic
-viewer/                      → HTML/JS map viewer (Zoom, Tabs, Dropbox URLs)
-.github/workflows/           → GitHub Actions (CI for cross-platform builds)
-```
+
+This creates a zipped bundle with platform-specific binaries, configurations, and a viewer UI, ready to distribute.
 
 ---
-
 ## 🚢 Releasing
 
 Use the release command to:
@@ -107,19 +132,6 @@ This triggers GitHub Actions to build the toolkit for Windows, Linux, and macOS 
 
 ---
 
-## 🌐 Contributing to the Viewer
-
-The HTML+JS viewer is located in the `viewer/` folder. It supports:
-
-- Dynamic tab generation
-- Zoom & pan
-- Dropbox-compatible preview image URLs
-- Local + remote planet name loading via `.js` or `.json`
-
-You can test it by opening `viewer/index.html` in a browser (local file access works).
-
----
-
 ## ❤️ How to Contribute
 
 1. Fork this repository
@@ -133,7 +145,6 @@ You can test it by opening `viewer/index.html` in a browser (local file access w
 ## 🧩 Need Help?
 
 - Open an [Issue](https://github.com/AntiElitz/FactorioPreviewToolkit/issues)
-- Or start a [Discussion](https://github.com/AntiElitz/FactorioPreviewToolkit/discussions)
-- Or ping @AntiElitz on GitHub
+- Or ping @AntiElitz on Discord
 
 Thanks for making this toolkit better!
