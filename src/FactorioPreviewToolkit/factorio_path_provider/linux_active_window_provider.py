@@ -38,5 +38,4 @@ class LinuxActiveWindowProvider(BaseActiveWindowProvider):
 
         except (subprocess.CalledProcessError, psutil.NoSuchProcess, psutil.AccessDenied) as e:
             log.error(f"Error getting Factorio executable path (Linux): {e}")
-
         return None

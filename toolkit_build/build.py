@@ -3,6 +3,7 @@ Builds a standalone executable using PyInstaller with project-specific settings.
 Also handles cleanup, copies runtime files, zips the result, and prints a summary.
 """
 
+import os
 import shutil
 import stat
 import subprocess
@@ -110,7 +111,8 @@ def copy_runtime_files() -> None:
     previews_dir = DIST_DIR / "previews"
     previews_dir.mkdir(parents=True, exist_ok=True)
 
-    (previews_dir / "local_planet_names.js").write_text(
+    js_file = previews_dir / "local_planet_names.js"
+    js_file.write_text(
         "const planetNames = [\n"
         '  "nauvis",\n'
         '  "vulcanus",\n'
@@ -121,6 +123,9 @@ def copy_runtime_files() -> None:
         'const planetNamesUploadTime = "";\n',
         encoding="utf-8",
     )
+
+    # Ensure it's writable by the user (rw-r--r--)
+    os.chmod(js_file, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
 
 
 def copy_rclone_binary_for_current_platform() -> None:
@@ -138,13 +143,11 @@ def copy_rclone_binary_for_current_platform() -> None:
     print(f"Copying rclone binary from {source_root} -> {dest_root}")
     shutil.copytree(source_root, dest_root, dirs_exist_ok=True)
 
-    # Add executable permission to rclone binary
-    rclone_binary = dest_root / "rclone"
-    if rclone_binary.exists():
-        rclone_binary.chmod(
-            rclone_binary.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
-        )
-        print(f"Marked {rclone_binary} as executable")
+    # Mark all rclone binaries inside as executable
+    for path in dest_root.rglob("*"):
+        if path.is_file() and path.name.startswith("rclone"):
+            print(f"🔧 Marking {path} as executable")
+            path.chmod(path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 
 def print_result(version: str) -> None:
