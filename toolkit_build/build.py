@@ -146,7 +146,7 @@ def copy_rclone_binary_for_current_platform() -> None:
     # Mark all rclone binaries inside as executable
     for path in dest_root.rglob("*"):
         if path.is_file() and path.name.startswith("rclone"):
-            print(f"🔧 Marking {path} as executable")
+            print(f"Marking {path} as executable")
             path.chmod(path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 
