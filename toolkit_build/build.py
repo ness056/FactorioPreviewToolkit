@@ -4,6 +4,7 @@ Also handles cleanup, copies runtime files, zips the result, and prints a summar
 """
 
 import shutil
+import stat
 import subprocess
 import sys
 from pathlib import Path
@@ -136,6 +137,14 @@ def copy_rclone_binary_for_current_platform() -> None:
 
     print(f"Copying rclone binary from {source_root} -> {dest_root}")
     shutil.copytree(source_root, dest_root, dirs_exist_ok=True)
+
+    # Add executable permission to rclone binary
+    rclone_binary = dest_root / "rclone"
+    if rclone_binary.exists():
+        rclone_binary.chmod(
+            rclone_binary.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+        )
+        print(f"Marked {rclone_binary} as executable")
 
 
 def print_result(version: str) -> None:
