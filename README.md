@@ -33,7 +33,7 @@ Run the provided `factorio-preview-toolkit` executable (just double-click it or 
 >  ⚠️ Don't want automatic uploads or clipboard monitoring? You can fully customize this in the `config.ini` file. (See the config section below.)
 
 ### 3. 🪟 Open the Map Viewer
-Open the included `viewer.html` file in your browser. This local interface lets you explore your map previews easily.
+Open the included `factorio-preview-viewer.html` file in your browser. This local interface lets you explore your map previews easily.
 - **Switch between planets** using the tab bar
 - **Zoom in and out** with your mouse wheel
 - **Pan the map**:
