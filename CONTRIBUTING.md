@@ -1,35 +1,139 @@
-## 🛠️ For Developers
+# 🛠️ Contributing to Factorio Preview Toolkit
 
-This project is structured using [PEP 621](https://peps.python.org/pep-0621/) with a modern `pyproject.toml` and a `src/` layout. It includes code formatting, static type checking, and pre-commit hooks to ensure consistency.
+Thank you for your interest in contributing! This toolkit helps automate the generation of map previews for Factorio speedrunners. Whether you're fixing bugs, improving the UI, adding features, or updating documentation — we welcome all contributions.
 
-### 🔧 Setup Instructions
+---
 
-1. **Install in dev mode (with all tools)**  
-   You'll need Python 3.10+ and `pip`.
+## 🚀 Getting Started
 
-   ```bash
-   pip install .[dev]
-   ```
+### 1. Clone the Repository
 
-2. **Install pre-commit hooks (runs checks before every commit)**
+```bash
+git clone https://github.com/AntiElitz/FactorioPreviewToolkit.git
+cd FactorioPreviewToolkit
+```
 
-   ```bash
-   pre-commit install
-   ```
+### 2. Set Up a Virtual Environment
 
-3. **Run checks manually**
+We recommend using a virtual environment to isolate dependencies:
 
-   ```bash
-   black .           # Format code
-   mypy . --strict   # Type check
-   ```
+```bash
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+```
 
-4. **Run the app (if using CLI entry point)**
+### 3. Install Development Dependencies
 
-   ```bash
-   factorio-preview  # Or use: python -m your_main_module
-   ```
+Install everything needed for development, testing, and building:
 
-> 🧪 All commits will be automatically checked with [Black](https://black.readthedocs.io/) and [mypy](http://mypy-lang.org/) via pre-commit hooks.
+```bash
+pip install .[dev]
+```
+
+If you're on Linux or macOS and using GUI features (like tkinter), you may need to manually install additional system packages (e.g. `sudo apt install python3-tk` on Debian/Ubuntu).
+
+---
+
+## 💻 Running the Toolkit Locally
+
+To launch the main tool, use the following command **from the project root**:
+
+```bash
+python -m src.FactorioPreviewToolkit
+```
+
+This ensures Python locates the main module correctly inside the `src` directory.
+
+---
+
+## 🛠️ Building a Standalone Executable
+
+You can generate a one-file executable using PyInstaller by running:
+
+```bash
+python -m toolkit_build.build
+```
+
+This creates a zipped bundle with platform-specific binaries, configurations, and a viewer UI, ready to distribute.
 
 
+## 🧪 Formatting, Linting, and Type Checking
+
+This project uses:
+
+- [`black`](https://black.readthedocs.io/) for auto-formatting
+- [`mypy`](http://mypy-lang.org/) for static type checking
+- [`pre-commit`](https://pre-commit.com/) for running checks before each commit
+
+### Set up the pre-commit hooks:
+
+```bash
+pre-commit install
+```
+
+### Run all checks manually:
+
+```bash
+pre-commit run --all-files
+```
+
+---
+
+## 🏗️ Project Structure
+
+```
+toolkit_build/               → Build and release logic (zip, PyInstaller, tag push)
+src/FactorioPreviewToolkit/  → Main application logic
+viewer/                      → HTML/JS map viewer (Zoom, Tabs, Dropbox URLs)
+.github/workflows/           → GitHub Actions (CI for cross-platform builds)
+```
+
+---
+
+## 🚢 Releasing
+
+Use the release command to:
+
+- Bump the version
+- Build the executable
+- Tag the release
+- Push to GitHub (which triggers the cross-platform build pipeline)
+
+```bash
+python -m toolkit_build.release
+```
+
+This triggers GitHub Actions to build the toolkit for Windows, Linux, and macOS and (if configured) attach the zip files to a GitHub release.
+
+---
+
+## 🌐 Contributing to the Viewer
+
+The HTML+JS viewer is located in the `viewer/` folder. It supports:
+
+- Dynamic tab generation
+- Zoom & pan
+- Dropbox-compatible preview image URLs
+- Local + remote planet name loading via `.js` or `.json`
+
+You can test it by opening `viewer/index.html` in a browser (local file access works).
+
+---
+
+## ❤️ How to Contribute
+
+1. Fork this repository
+2. Create a new branch: `git checkout -b my-fix`
+3. Make your changes
+4. Run lint/type checks
+5. Push to your fork and open a Pull Request
+
+---
+
+## 🧩 Need Help?
+
+- Open an [Issue](https://github.com/AntiElitz/FactorioPreviewToolkit/issues)
+- Or start a [Discussion](https://github.com/AntiElitz/FactorioPreviewToolkit/discussions)
+- Or ping @AntiElitz on GitHub
+
+Thanks for making this toolkit better!

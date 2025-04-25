@@ -30,6 +30,7 @@ dev = [
     "pydantic[mypy]",
     "tomli",
     "tomli-w",
+    # "tkinter" – install manually if you're on Linux: 'sudo apt install python3-tk'
 ]
 
 [project.scripts]
