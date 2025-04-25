@@ -1,4 +1,5 @@
 import collections
+import os
 import subprocess
 from pathlib import Path
 
@@ -18,6 +19,13 @@ class LinuxActiveWindowProvider(BaseActiveWindowProvider):
 
     def __init__(self, on_new_factorio_path: collections.abc.Callable[[Path], None]):
         super().__init__(on_new_factorio_path)
+        if os.environ.get("XDG_SESSION_TYPE") == "wayland":
+            raise RuntimeError(
+                "❌ Active window detection is not supported on Wayland.\n"
+                "Please edit your config.ini and use a different locator method like:\n\n"
+                "    factorio_locator_method = fixed_path\n\n"
+                "Then provide the executable path manually via fixed_path_factorio_executable."
+            )
 
     def get_factorio_executable_path(self) -> Path | None:
         try:
