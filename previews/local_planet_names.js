@@ -5,4 +5,4 @@ const planetNames = [
   "fulgora",
   "aquilo"
 ];
-const planetNamesUploadTime = "432423432";
+const planetNamesUploadTime = "";
