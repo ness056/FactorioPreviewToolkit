@@ -84,7 +84,7 @@ It contains permanent links to your uploaded preview files
 
 🟠 **If you upload with `upload_method = local_sync` or manually (Dropbox Desktop, etc.)**
 
-When using another method, the viewer_config.js content have to be configured manually:
+When using another method, the viewer_config.js content has to be configured manually:
 1. Go to your hosting service (e.g., Dropbox website) and generate a permanent, static link for each image file in your remote `previews/` folder.
 2. Edit your links:
    - If Dropbox gives you a non-fullscreen link like:
