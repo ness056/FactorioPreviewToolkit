@@ -7,6 +7,7 @@ temp_files/
 
 # Map preview images and links (output)
 previews/
+/previews/local_planet_names.js
 
 # Logs
 logs/
