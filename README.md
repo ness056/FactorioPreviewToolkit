@@ -67,21 +67,42 @@ Make sure you’re logged in at [github.com](https://github.com).
 - Choose your GitHub account to fork the repo into  
 ➡️ You now have your own copy of the toolkit!
 
-### 🧩 Step 2: Generate Remote Viewer Config
-To make the online viewer work with your uploaded files:
-1. **Run the Toolkit locally** with all your planets enabled.
-2. This will generate a file at:
-FactorioPreviewToolkit/previews/remote_viewer_config.txt
-It contains permanent links to your uploaded preview files.
 
-### ✏️ Step 3: Update the Online Viewer
-1. In your **forked repository**, go to: `./viewer/viewer_config.js`
-2. Click the ✏️ edit icon on GitHub
-3. Replace the **entire file** with the contents of `remote_viewer_config.txt`
-4. Commit the changes
+### ✏️ Step 2: Update the Online Remote Viewer Config
 > ⚠️ If you later **add new planets**, **delete uploaded files**, or if **Dropbox unexpectedly changes links**, you will need to **repeat this process**:  
 
-### 🛠️ Step 4: Enable GitHub Pages
+🔵 **(Recommended) If you uploaded using `upload_method = rclone`:**
+
+When using `upload_method = rclone`, the viewer_config.js content will be generated automatically:
+1. **Run the Toolkit locally** with all your planets enabled
+2. This will generate a file at: `FactorioPreviewToolkit/previews/remote_viewer_config.txt` <br>
+It contains permanent links to your uploaded preview files
+3. In your **forked repository**, go to: `./viewer/viewer_config.js`
+4. Click the ✏️ edit icon on GitHub
+5. Replace the **entire file** with the contents of `remote_viewer_config.txt`
+6. Commit the changes
+
+🟠 **If you upload with `upload_method = local_sync` or manually (Dropbox Desktop, etc.)**
+
+When using another method, the viewer_config.js content have to be configured manually:
+1. Go to your hosting service (e.g., Dropbox website) and generate a permanent, static link for each image file in your remote `previews/` folder.
+2. Edit your links:
+   - If Dropbox gives you a non-fullscreen link like:
+     ```
+     https://www.dropbox.com/scl/fi/xxxxx/planet.png?...&dl=0
+     ```
+   - You must **transform it** to a fullscreen link:
+     ```
+     https://dl.dropboxusercontent.com/scl/fi/xxxxx/planet.png?...
+     ```
+     (replace `www.dropbox.com` → `dl.dropboxusercontent.com` and **remove** `&dl=0`)
+3. In your **forked repository**, go to: `./viewer/viewer_config.js`
+4. Click the ✏️ edit icon on GitHub
+5. Update the links in the entire file manually
+6. Commit the changes
+
+
+### 🛠️ Step 3: Enable GitHub Pages
 - Go to your new **forked repository**
 - Click the **“Settings”** tab in the middle (not the settings for your profile)
 - In the left sidebar, scroll down and click **“Pages”**
