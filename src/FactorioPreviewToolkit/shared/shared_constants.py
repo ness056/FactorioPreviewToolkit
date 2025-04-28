@@ -58,7 +58,7 @@ class _Constants:
         config_path = self.BASE_TEMP_DIR / self.FACTORIO_CONFIG_FILENAME
         if not config_path.exists():
             with log_section(f"❌ Factorio config not found at {config_path}. Creating it..."):
-                if detect_os() == "mac":
+                if detect_os() == "macOS":
                     read_data = "__PATH__executable__/../data"
                 else:
                     read_data = "__PATH__executable__/../../data"
