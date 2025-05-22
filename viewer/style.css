@@ -125,36 +125,24 @@ body {
   transform: translateY(2px);
 }
 
-#imageWrapper {
-  position: absolute;
-  top: 0;
-  left: 0;
-  background-color: black;
-  transform-origin: top left;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .map-container {
   width: calc(100vw - 8px);
   height: calc(100vh - 50px);
   overflow: hidden;
   position: relative;
   margin: 4px;
-  background-color: white; /* add this if missing */
+  background-color: black;
   cursor: grab;
 }
 
 .map {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  max-width: none;
-  max-height: none;
+  top: 0;
+  left: 0;
   user-select: none;
   -webkit-user-drag: none;
   user-drag: none;
+  max-width: none;
+  max-height: none;
+  transform-origin: top left;
 }
-

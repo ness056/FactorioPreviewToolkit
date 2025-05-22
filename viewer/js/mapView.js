@@ -5,8 +5,6 @@ let zoomStepIndex = 0;
 let scale = 1, offsetX = 0, offsetY = 0;
 
 function setupTabs(previewSources, tabContainer, mapImage) {
-  const imageWrapper = document.getElementById("imageWrapper");
-
   Object.entries(previewSources).forEach(([planet, url], index) => {
     const tab = document.createElement("div");
     tab.className = "tab";
@@ -32,10 +30,6 @@ function setupTabs(previewSources, tabContainer, mapImage) {
       mapImage.onload = () => {
         mapImage.style.display = "block";
         fallback.style.display = "none";
-
-        // Resize wrapper to 2x image size
-        imageWrapper.style.width = `${mapImage.naturalWidth * 2}px`;
-        imageWrapper.style.height = `${mapImage.naturalHeight * 2}px`;
       };
 
       mapImage.src = url;
@@ -65,10 +59,6 @@ function handleImageLoad(mapImage, container, zoomDisplay) {
   const imgW = mapImage.naturalWidth;
   const imgH = mapImage.naturalHeight;
 
-  const imageWrapper = document.getElementById("imageWrapper");
-  imageWrapper.style.width = `${imgW * 2}px`;
-  imageWrapper.style.height = `${imgH * 2}px`;
-
   if (statePerPlanet[currentPlanet]) {
     ({ zoomStepIndex, offsetX, offsetY } = statePerPlanet[currentPlanet]);
     scale = getScaleFromStep(zoomStepIndex);
@@ -79,13 +69,12 @@ function handleImageLoad(mapImage, container, zoomDisplay) {
     offsetY = (rect.height - imgH * scale) / 2;
   }
 
-  updateTransform(imageWrapper);
+  updateTransform(mapImage);
   updateZoomLabel(zoomDisplay);
 }
 
 function handleWheelZoom(e, mapImage, container, zoomDisplay) {
   e.preventDefault();
-  const imageWrapper = document.getElementById("imageWrapper");
   const rect = container.getBoundingClientRect();
   const mouseX = (e.clientX - rect.left - offsetX) / scale;
   const mouseY = (e.clientY - rect.top - offsetY) / scale;
@@ -97,7 +86,7 @@ function handleWheelZoom(e, mapImage, container, zoomDisplay) {
   offsetY -= mouseY * (newScale - scale);
   scale = newScale;
 
-  updateTransform(imageWrapper);
+  updateTransform(mapImage);
   updateZoomLabel(zoomDisplay);
 }
 
@@ -106,14 +95,12 @@ function resetMapView(mapImage, container, zoomDisplay) {
   const imgW = mapImage.naturalWidth;
   const imgH = mapImage.naturalHeight;
 
-  const imageWrapper = document.getElementById("imageWrapper");
-
   zoomStepIndex = 0;
   scale = getScaleFromStep(zoomStepIndex);
   offsetX = (rect.width - imgW * scale) / 2;
   offsetY = (rect.height - imgH * scale) / 2;
 
-  updateTransform(imageWrapper);
+  updateTransform(mapImage);
   updateZoomLabel(zoomDisplay);
 }
 
@@ -121,8 +108,8 @@ function getScaleFromStep(step) {
   return Math.pow(baseZoomFactor, step);
 }
 
-function updateTransform(wrapper) {
-  wrapper.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+function updateTransform(target) {
+  target.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
 }
 
 function updateZoomLabel(label) {

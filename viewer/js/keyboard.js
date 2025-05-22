@@ -1,5 +1,4 @@
 function initKeyboardControls(mapImage, mapContainer, zoomDisplay) {
-  const wrapper = document.getElementById("imageWrapper");
   const keysPressed = new Set();
   const panSpeed = 32;
   let isDragging = false;
@@ -37,7 +36,7 @@ function initKeyboardControls(mapImage, mapContainer, zoomDisplay) {
     if (!isDragging) return;
     offsetX = e.clientX - startX;
     offsetY = e.clientY - startY;
-    updateTransform(wrapper);
+    updateTransform(mapImage);
   });
 
   window.addEventListener("keydown", e => {
@@ -73,7 +72,7 @@ function initKeyboardControls(mapImage, mapContainer, zoomDisplay) {
     }
 
     if (moved) {
-      updateTransform(wrapper);
+      updateTransform(mapImage);
     }
 
     requestAnimationFrame(animate);
