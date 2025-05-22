@@ -5,6 +5,8 @@ let zoomStepIndex = 0;
 let scale = 1, offsetX = 0, offsetY = 0;
 
 function setupTabs(previewSources, tabContainer, mapImage) {
+  const imageWrapper = document.getElementById("imageWrapper");
+
   Object.entries(previewSources).forEach(([planet, url], index) => {
     const tab = document.createElement("div");
     tab.className = "tab";
@@ -15,7 +17,6 @@ function setupTabs(previewSources, tabContainer, mapImage) {
       tab.classList.add("active");
       currentPlanet = planet;
 
-      // Set up fallback message
       const fallback = document.createElement("div");
       fallback.textContent = "🚫 No preview available yet for this planet.";
       fallback.style.cssText = "color: white; padding: 1em; text-align: center;";
@@ -31,6 +32,10 @@ function setupTabs(previewSources, tabContainer, mapImage) {
       mapImage.onload = () => {
         mapImage.style.display = "block";
         fallback.style.display = "none";
+
+        // Resize wrapper to 2x image size
+        imageWrapper.style.width = `${mapImage.naturalWidth * 2}px`;
+        imageWrapper.style.height = `${mapImage.naturalHeight * 2}px`;
       };
 
       mapImage.src = url;
@@ -40,7 +45,6 @@ function setupTabs(previewSources, tabContainer, mapImage) {
     tabContainer.appendChild(tab);
   });
 }
-
 
 function switchPlanet(planet, previewSources, mapImage) {
   if (currentPlanet) {
@@ -60,8 +64,10 @@ function handleImageLoad(mapImage, container, zoomDisplay) {
   const rect = container.getBoundingClientRect();
   const imgW = mapImage.naturalWidth;
   const imgH = mapImage.naturalHeight;
-  const minScale = Math.max(rect.width / imgW, rect.height / imgH);
-  const minStep = Math.ceil(Math.log(minScale) / Math.log(baseZoomFactor));
+
+  const imageWrapper = document.getElementById("imageWrapper");
+  imageWrapper.style.width = `${imgW * 2}px`;
+  imageWrapper.style.height = `${imgH * 2}px`;
 
   if (statePerPlanet[currentPlanet]) {
     ({ zoomStepIndex, offsetX, offsetY } = statePerPlanet[currentPlanet]);
@@ -73,30 +79,25 @@ function handleImageLoad(mapImage, container, zoomDisplay) {
     offsetY = (rect.height - imgH * scale) / 2;
   }
 
-  clampOffsets(mapImage, container);
-  updateTransform(mapImage);
+  updateTransform(imageWrapper);
   updateZoomLabel(zoomDisplay);
 }
 
 function handleWheelZoom(e, mapImage, container, zoomDisplay) {
   e.preventDefault();
+  const imageWrapper = document.getElementById("imageWrapper");
   const rect = container.getBoundingClientRect();
   const mouseX = (e.clientX - rect.left - offsetX) / scale;
   const mouseY = (e.clientY - rect.top - offsetY) / scale;
 
-  const minScale = Math.max(rect.width / mapImage.naturalWidth, rect.height / mapImage.naturalHeight);
-  const minStep = Math.ceil(Math.log(minScale) / Math.log(baseZoomFactor));
-
   zoomStepIndex += e.deltaY < 0 ? 1 : -1;
-  zoomStepIndex = Math.max(zoomStepIndex, minStep);
-
   const newScale = getScaleFromStep(zoomStepIndex);
+
   offsetX -= mouseX * (newScale - scale);
   offsetY -= mouseY * (newScale - scale);
   scale = newScale;
 
-  clampOffsets(mapImage, container);
-  updateTransform(mapImage);
+  updateTransform(imageWrapper);
   updateZoomLabel(zoomDisplay);
 }
 
@@ -105,13 +106,14 @@ function resetMapView(mapImage, container, zoomDisplay) {
   const imgW = mapImage.naturalWidth;
   const imgH = mapImage.naturalHeight;
 
+  const imageWrapper = document.getElementById("imageWrapper");
+
   zoomStepIndex = 0;
   scale = getScaleFromStep(zoomStepIndex);
   offsetX = (rect.width - imgW * scale) / 2;
   offsetY = (rect.height - imgH * scale) / 2;
 
-  clampOffsets(mapImage, container);
-  updateTransform(mapImage);
+  updateTransform(imageWrapper);
   updateZoomLabel(zoomDisplay);
 }
 
@@ -119,17 +121,8 @@ function getScaleFromStep(step) {
   return Math.pow(baseZoomFactor, step);
 }
 
-function clampOffsets(mapImage, container) {
-  const rect = container.getBoundingClientRect();
-  const imgW = mapImage.naturalWidth * scale;
-  const imgH = mapImage.naturalHeight * scale;
-
-  offsetX = Math.min(0, Math.max(offsetX, rect.width - imgW));
-  offsetY = Math.min(0, Math.max(offsetY, rect.height - imgH));
-}
-
-function updateTransform(mapImage) {
-  mapImage.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+function updateTransform(wrapper) {
+  wrapper.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
 }
 
 function updateZoomLabel(label) {
