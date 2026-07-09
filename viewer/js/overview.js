@@ -28,6 +28,7 @@ function buildOverview(previewSources, overviewEl) {
 
   const side = document.createElement("div");
   side.className = "overview-side";
+  side.style.gridTemplateRows = `repeat(${cfg.side.length}, 1fr)`
   availableSide.forEach((planet) => {
     side.appendChild(makeOverviewCell(planet, previewSources[planet], "overview-cell", "fill"));
   });

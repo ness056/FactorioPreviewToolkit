@@ -14,7 +14,7 @@ const viewerConfig = {
   // (i.e. it is skipped for vanilla / non-Space-Age maps).
   overview: {
     main: "nauvis",
-    side: ["gleba", "fulgora", "vulcanus", "aquilo"]
+    side: ["gleba", "aquilo"]
   },
 
   // Tab selected on load: "overview", a planet name (e.g. "nauvis"), or
@@ -27,7 +27,7 @@ const viewerConfig = {
   // planet not listed here. Planet tabs and the overview's main planet
   // (Nauvis) stay at the upstream default and are not affected by this.
   defaultZoom: {
-    default: 1.5,
-    aquilo: 3
+    default: 3.5,
+    aquilo: 7
   }
 };
